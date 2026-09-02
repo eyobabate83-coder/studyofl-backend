@@ -1,0 +1,1705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Studyo — study together, school of FL'</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/favicon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/favicon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1B1035; --violet:#3D1E68; --violet-2:#5B2A86; --coral:#FF6F5E;
+    --flame-1:#FFC857; --flame-2:#FF9D5C; --flame-3:#FF5E62; --teal:#2DD4BF; --blue:#5AA9FF;
+    --glass:rgba(255,255,255,.10); --glass-brd:rgba(255,255,255,.22);
+    --text:#F4F1FB; --text-dim:#C9C0E6; --text-dimmer:#9C90C2; --radius:20px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Plus Jakarta Sans', sans-serif; color:var(--text); min-height:100vh; overflow-x:hidden;
+    background:
+      radial-gradient(1100px 700px at 12% -10%, #6C3FB5 0%, transparent 55%),
+      radial-gradient(900px 650px at 105% 10%, #FF6F5E 0%, transparent 45%),
+      radial-gradient(1000px 800px at 50% 120%, #2A1550 0%, transparent 60%),
+      linear-gradient(160deg, #190C33 0%, #24123F 45%, #341A52 100%);
+    background-attachment:fixed;
+  }
+  .blob{ position:fixed; border-radius:50%; filter:blur(70px); opacity:.35; z-index:0; pointer-events:none; animation:drift 22s ease-in-out infinite; }
+  .blob-a{width:420px;height:420px; background:var(--coral); top:-120px; right:-100px;}
+  .blob-b{width:360px;height:360px; background:var(--teal); bottom:-140px; left:-80px; animation-delay:-8s;}
+  .blob-c{width:300px;height:300px; background:var(--flame-1); top:40%; left:60%; animation-delay:-14s; opacity:.18;}
+  @keyframes drift{ 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(30px,-25px) scale(1.08);} }
+
+  .watermark{
+    position:fixed; right:-60px; bottom:-50px; width:460px; height:460px;
+    background-image:url('assets/finote-loza-logo.png');
+    background-size:contain; background-repeat:no-repeat; background-position:bottom right;
+    opacity:.05; z-index:0; pointer-events:none; filter:saturate(60%);
+  }
+  @media (max-width:760px){ .watermark{ width:280px; height:280px; right:-40px; bottom:-30px; } }
+
+  .study-bg{
+    position:fixed; left:-30px; top:50%; transform:translateY(-50%);
+    width:380px; height:380px; z-index:0; pointer-events:none; opacity:.11;
+  }
+  @media (max-width:1000px){ .study-bg{ display:none; } }
+  h1,h2,h3,.brand,.display{ font-family:'Fredoka', sans-serif; }
+  .wrap{ position:relative; z-index:1; max-width:1180px; margin:0 auto; padding:22px 24px 90px; }
+
+  .card{
+    background:var(--glass); border:1px solid var(--glass-brd); border-radius:var(--radius);
+    backdrop-filter:blur(22px); -webkit-backdrop-filter:blur(22px);
+    box-shadow:0 8px 32px rgba(11,4,30,.35), inset 0 1px 0 rgba(255,255,255,.12);
+    position:relative; overflow:hidden;
+  }
+
+  .icon{ width:1em; height:1em; display:inline-block; vertical-align:-.15em; flex-shrink:0; }
+
+  .btn{
+    border:none; cursor:pointer; font-family:'Plus Jakarta Sans'; font-weight:700; font-size:13.5px;
+    padding:12px 18px; border-radius:13px; transition:.2s ease; color:#20102F;
+    background:linear-gradient(135deg, var(--teal), #57e6d3); box-shadow:0 6px 16px rgba(45,212,191,.3);
+  }
+  .btn:hover{ transform:translateY(-2px) scale(1.03); box-shadow:0 10px 22px rgba(45,212,191,.4); }
+  .btn:active{ transform:scale(.97); }
+  .btn.ghost{ background:rgba(255,255,255,.08); color:var(--text); border:1px solid rgba(255,255,255,.2); box-shadow:none; }
+  .btn.ghost:hover{ background:rgba(255,255,255,.14); }
+  .btn:disabled{ opacity:.55; cursor:not-allowed; transform:none; }
+  .btn.wide{ width:100%; }
+
+  input, select{
+    padding:12px 14px; border-radius:13px; border:1px solid rgba(255,255,255,.18);
+    background:rgba(255,255,255,.06); color:var(--text); font-family:inherit; font-size:14px; outline:none; transition:.2s;
+  }
+  input::placeholder{ color:var(--text-dimmer); }
+  input:focus, select:focus{ border-color:var(--teal); background:rgba(255,255,255,.09); }
+  label{ font-size:12px; color:var(--text-dim); font-weight:600; margin-bottom:6px; display:block; }
+  .field{ margin-bottom:14px; }
+
+  .error-box{
+    background:rgba(255,94,98,.14); border:1px solid rgba(255,94,98,.35); color:#FFC1C2;
+    padding:10px 14px; border-radius:12px; font-size:13px; margin-bottom:14px; display:none;
+  }
+  .error-box.show{ display:block; }
+
+  /* ============= LOGIN SCREEN ============= */
+  #loginScreen{ min-height:100vh; display:flex; align-items:center; justify-content:center; position:relative; z-index:1; padding:20px; }
+  .login-card{ width:420px; max-width:100%; padding:32px 30px; }
+  .login-brand{ display:flex; align-items:center; gap:10px; font-size:24px; font-weight:600; margin-bottom:4px; }
+  .login-brand .mark{ width:38px; height:38px; border-radius:12px; background:linear-gradient(135deg, var(--flame-2), var(--coral)); display:flex; align-items:center; justify-content:center; font-size:20px; color:#2B0F08; box-shadow:0 6px 18px rgba(255,111,94,.35); }
+  .login-sub{ color:var(--text-dim); font-size:13.5px; margin:0 0 22px; }
+  .login-tabs{ display:flex; gap:6px; padding:5px; border-radius:14px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14); margin-bottom:22px; }
+  .login-tab{ flex:1; border:none; background:transparent; color:var(--text-dim); padding:10px; border-radius:10px; font-family:'Plus Jakarta Sans'; font-weight:700; font-size:13px; cursor:pointer; transition:.2s; display:flex; align-items:center; justify-content:center; gap:6px;}
+  .login-tab.active{ background:linear-gradient(135deg, rgba(255,157,92,.9), rgba(255,94,98,.9)); color:#2B0F08; }
+  .login-pane{ display:none; }
+  .login-pane.active{ display:block; animation:fadeUp .35s ease; }
+  @keyframes fadeUp{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+  .demo-hint{ font-size:11.5px; color:var(--text-dimmer); background:rgba(255,255,255,.05); border:1px dashed rgba(255,255,255,.18); border-radius:10px; padding:9px 12px; margin-top:16px; line-height:1.6; }
+  .demo-hint b{ color:var(--text-dim); }
+
+  /* ============= APP SHELL ============= */
+  #app{ display:none; }
+  .topbar{ display:flex; align-items:center; justify-content:space-between; margin-bottom:26px; flex-wrap:wrap; gap:14px;}
+  .brand{ display:flex; align-items:center; gap:10px; font-size:22px; font-weight:600; }
+  .brand .mark{ width:36px; height:36px; border-radius:11px; background:linear-gradient(135deg, var(--flame-2), var(--coral)); display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px rgba(255,111,94,.35); color:#2B0F08; }
+  .topbar-right{ display:flex; align-items:center; gap:12px; }
+  .whoami{ text-align:right; font-size:12.5px; color:var(--text-dim); line-height:1.4; }
+  .whoami b{ color:var(--text); font-family:'Fredoka'; font-size:14px; display:block; }
+
+  .roles{ display:flex; gap:6px; padding:5px; border-radius:16px; background:var(--glass); border:1px solid var(--glass-brd); backdrop-filter:blur(18px); }
+  .role-btn{ border:none; background:transparent; color:var(--text-dim); padding:9px 16px; border-radius:12px; font-family:'Plus Jakarta Sans'; font-weight:600; font-size:13.5px; cursor:pointer; transition:.25s ease; display:inline-flex; align-items:center; gap:7px;}
+  .role-btn .icon{ font-size:16px; }
+  .role-btn:hover{ color:var(--text); transform:translateY(-1px); }
+  .role-btn.active{ background:linear-gradient(135deg, rgba(255,157,92,.9), rgba(255,94,98,.9)); color:#2B0F08; box-shadow:0 6px 16px rgba(255,94,98,.35); }
+
+  .view{ display:none; animation:fadeUp .5s ease; }
+  .view.active{ display:block; }
+
+  .hero{ display:flex; align-items:center; justify-content:space-between; gap:24px; padding:26px 28px; margin-bottom:20px; flex-wrap:wrap;}
+  .hero h1{ font-size:28px; margin:0 0 6px; font-weight:600; }
+  .hero p{ margin:0; color:var(--text-dim); font-size:14.5px; }
+  .streak-chip{ display:flex; align-items:center; gap:12px; padding:12px 20px 12px 14px; border-radius:18px; background:linear-gradient(135deg, rgba(255,157,92,.25), rgba(255,94,98,.18)); border:1px solid rgba(255,157,92,.4); }
+  .flame-icon{ font-size:28px; color:var(--flame-2); display:flex; filter:drop-shadow(0 0 10px rgba(255,140,60,.8)); animation:flicker 1.6s ease-in-out infinite; }
+  @keyframes flicker{ 0%,100%{ transform:scale(1) rotate(-2deg);} 50%{ transform:scale(1.08) rotate(2deg);} }
+  .streak-num{ font-family:'Fredoka'; font-size:26px; font-weight:600; line-height:1; }
+  .streak-label{ font-size:11.5px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.6px; }
+
+  .grid2{ display:grid; grid-template-columns:1.4fr 1fr; gap:20px; }
+  @media (max-width:860px){ .grid2{ grid-template-columns:1fr; } }
+  .panel{ padding:22px 24px; }
+  .panel h2{ font-size:17px; margin:0 0 16px; font-weight:600; display:flex; align-items:center; gap:8px;}
+  .panel h2 .icon{ font-size:18px; color:var(--flame-1); }
+
+  .week-row{ display:flex; gap:8px; margin-bottom:22px; }
+  .day{ flex:1; text-align:center; padding:10px 4px; border-radius:13px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.10); font-size:12px; color:var(--text-dimmer); transition:.2s; }
+  .day .d{ font-weight:700; font-size:13px; margin-top:4px; display:flex; align-items:center; justify-content:center;}
+  .day .d .icon{ font-size:13px; }
+  .day.done{ background:linear-gradient(160deg, rgba(255,157,92,.35), rgba(255,94,98,.22)); border-color:rgba(255,157,92,.55); color:#FFE3C9; }
+  .day.today{ box-shadow:0 0 0 2px var(--teal) inset; }
+
+  .todo-input{ display:flex; gap:8px; margin-bottom:16px; }
+  .todo-input input{ flex:1; }
+  .todo-list{ display:flex; flex-direction:column; gap:9px; }
+  .todo{ display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:14px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.10); transition:.2s; }
+  .todo:hover{ background:rgba(255,255,255,.08); transform:translateX(2px); }
+  .check{ width:22px; height:22px; border-radius:8px; border:2px solid rgba(255,255,255,.35); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; transition:.2s; color:#20102F;}
+  .check:hover{ border-color:var(--teal); transform:scale(1.1); }
+  .check.on{ background:linear-gradient(135deg, var(--teal), #57e6d3); border-color:transparent; }
+  .todo-text{ flex:1; font-size:14px; }
+  .todo.done .todo-text{ text-decoration:line-through; color:var(--text-dimmer); }
+  .tag{ font-size:10.5px; padding:4px 9px; border-radius:8px; font-weight:700; letter-spacing:.3px; text-transform:uppercase; }
+  .tag.math{ background:rgba(90,169,255,.2); color:#9CC8FF; }
+  .tag.sci{ background:rgba(45,212,191,.2); color:#7CEFDE; }
+  .tag.lang{ background:rgba(255,157,92,.2); color:#FFC79C; }
+  .tag.hist{ background:rgba(255,94,98,.2); color:#FFA3A5; }
+  .rm{ background:none; border:none; color:var(--text-dimmer); cursor:pointer; font-size:15px; padding:4px 6px; border-radius:6px; display:flex; align-items:center;}
+  .rm:hover{ color:#FF9494; background:rgba(255,90,90,.12); }
+  .empty{ color:var(--text-dimmer); font-size:13px; padding:10px 4px; }
+
+  .lb-item{ display:flex; align-items:center; gap:12px; padding:11px 12px; border-radius:14px; margin-bottom:7px; transition:.2s;}
+  .lb-item:hover{ background:rgba(255,255,255,.06); }
+  .lb-item.me{ background:linear-gradient(135deg, rgba(45,212,191,.16), rgba(90,169,255,.10)); border:1px solid rgba(45,212,191,.35); }
+  .rank-num{ width:26px; text-align:center; font-family:'Fredoka'; font-weight:600; color:var(--text-dimmer); font-size:14px; }
+  .rank-num.top{ color:var(--flame-1); }
+  .avatar{ width:36px; height:36px; border-radius:11px; display:flex; align-items:center; justify-content:center; font-family:'Fredoka'; font-weight:600; font-size:13px; color:#20102F; flex-shrink:0; }
+  .lb-name{ flex:1; }
+  .lb-name .n{ font-size:13.5px; font-weight:600; }
+  .lb-name .p{ font-size:11.5px; color:var(--text-dimmer); }
+  .pts{ font-family:'Fredoka'; font-weight:600; font-size:14px; color:var(--flame-1); }
+
+  .ai-fab{ position:fixed; bottom:26px; right:26px; z-index:40; width:60px; height:60px; border-radius:20px; border:none; cursor:pointer; background:linear-gradient(135deg, #7F77DD, #B08BFF); box-shadow:0 10px 30px rgba(127,119,221,.5); display:flex; align-items:center; justify-content:center; font-size:24px; color:#fff; transition:.25s ease; }
+  .ai-fab:hover{ transform:translateY(-3px) scale(1.06); box-shadow:0 14px 36px rgba(127,119,221,.6); }
+  .ai-fab .pulse{ position:absolute; inset:-6px; border-radius:24px; border:2px solid rgba(176,139,255,.5); animation:pulse 2.2s ease-out infinite; }
+  @keyframes pulse{ 0%{ transform:scale(.9); opacity:.8;} 100%{ transform:scale(1.35); opacity:0;} }
+  .ai-panel{ position:fixed; bottom:100px; right:26px; width:340px; max-width:88vw; height:440px; z-index:41; display:flex; flex-direction:column; padding:0; overflow:hidden; transform:translateY(16px) scale(.97); opacity:0; pointer-events:none; transition:.28s ease; }
+  .ai-panel.open{ transform:translateY(0) scale(1); opacity:1; pointer-events:auto; }
+  .ai-head{ display:flex; align-items:center; gap:10px; padding:16px 18px; border-bottom:1px solid rgba(255,255,255,.12); }
+  .ai-head .dot{ width:8px; height:8px; border-radius:50%; background:var(--teal); box-shadow:0 0 8px var(--teal); }
+  .ai-head b{ font-family:'Fredoka'; font-size:14.5px; }
+  .ai-head span{ font-size:11.5px; color:var(--text-dimmer); display:block; }
+  .ai-close{ margin-left:auto; background:none; border:none; color:var(--text-dimmer); font-size:18px; cursor:pointer; display:flex; }
+  .ai-body{ flex:1; overflow-y:auto; padding:16px 18px; display:flex; flex-direction:column; gap:10px; }
+  .msg{ max-width:82%; padding:10px 13px; border-radius:14px; font-size:13.3px; line-height:1.45; }
+  .msg.bot{ background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); align-self:flex-start; border-bottom-left-radius:4px; }
+  .msg.user{ background:linear-gradient(135deg, rgba(45,212,191,.35), rgba(90,169,255,.28)); align-self:flex-end; border-bottom-right-radius:4px; }
+  .ai-foot{ display:flex; gap:8px; padding:14px; border-top:1px solid rgba(255,255,255,.12); }
+  .ai-foot input{ flex:1; padding:10px 13px; font-size:13px; }
+  .ai-foot .btn{ padding:10px 14px; display:flex; }
+
+  .msg-shell{ display:grid; grid-template-columns:290px 1fr; gap:18px; height:600px; }
+  @media (max-width:860px){ .msg-shell{ grid-template-columns:1fr; height:auto; } }
+  .conv-list{ padding:16px; overflow-y:auto; }
+  .conv-list h2{ font-size:15px; margin:2px 6px 12px; }
+  .conv{ display:flex; align-items:center; gap:10px; padding:10px; border-radius:14px; cursor:pointer; margin-bottom:5px; transition:.2s; }
+  .conv:hover{ background:rgba(255,255,255,.07); }
+  .conv.active{ background:rgba(90,169,255,.14); border:1px solid rgba(90,169,255,.3); }
+  .conv .txt{ flex:1; min-width:0; }
+  .idbadge{ display:inline-flex; align-items:center; gap:5px; font-size:10.5px; font-weight:700; padding:3px 8px; border-radius:8px; background:rgba(255,200,87,.16); color:#FFD98A; border:1px solid rgba(255,200,87,.3); white-space:nowrap; margin-bottom:3px; }
+  .idbadge .icon{ font-size:12px; }
+  .conv .prev{ font-size:12px; color:var(--text-dimmer); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+  .chat-pane{ display:flex; flex-direction:column; padding:0; }
+  .chat-top{ display:flex; align-items:center; gap:12px; padding:16px 20px; border-bottom:1px solid rgba(255,255,255,.12); }
+  .chat-top .who b{ font-size:14.5px; display:block; font-family:'Fredoka'; }
+  .chat-body{ flex:1; overflow-y:auto; padding:18px 20px; display:flex; flex-direction:column; gap:11px; }
+  .bubble{ max-width:70%; padding:11px 15px; border-radius:15px; font-size:13.5px; line-height:1.5; }
+  .bubble.in{ background:rgba(255,255,255,.08); align-self:flex-start; border-bottom-left-radius:4px; }
+  .bubble.out{ background:linear-gradient(135deg, rgba(90,169,255,.32), rgba(45,212,191,.22)); align-self:flex-end; border-bottom-right-radius:4px; }
+  .bubble .meta{ font-size:10px; color:var(--text-dimmer); margin-top:5px; }
+  .chat-input{ display:flex; gap:10px; padding:16px 20px; border-top:1px solid rgba(255,255,255,.12); }
+  .chat-input input{ flex:1; font-size:13.5px; }
+
+  .stat-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:20px; }
+  @media (max-width:860px){ .stat-grid{ grid-template-columns:repeat(2,1fr); } }
+  .stat{ padding:20px 20px; }
+  .stat .val{ font-family:'Fredoka'; font-size:28px; font-weight:600; margin-bottom:3px; }
+  .stat .lbl{ font-size:12px; color:var(--text-dim); }
+  .stat .ic{ font-size:20px; margin-bottom:10px; opacity:.85; color:var(--flame-1); }
+  .stat .ic .icon{ display:block; }
+
+  table{ width:100%; border-collapse:collapse; }
+  th{ text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.5px; color:var(--text-dimmer); padding:0 12px 10px; font-weight:700; }
+  td{ padding:11px 12px; font-size:13.5px; border-top:1px solid rgba(255,255,255,.08); }
+  tr:hover td{ background:rgba(255,255,255,.03); }
+  .flame-row{ display:flex; align-items:center; gap:4px; }
+  .flame-row .icon{ font-size:13px; color:var(--flame-2); }
+
+  .section-title{ display:flex; align-items:center; justify-content:space-between; margin:26px 0 12px; flex-wrap:wrap; gap:8px;}
+  .section-title h2{ font-size:16px; margin:0; }
+  .section-title .note{ font-size:12px; color:var(--text-dimmer); }
+
+  .reg-form{ display:grid; grid-template-columns:1fr 1fr 1fr auto; gap:10px; align-items:end; }
+  @media (max-width:760px){ .reg-form{ grid-template-columns:1fr !important; } }
+
+  .mat-card{ display:flex; align-items:center; gap:14px; padding:14px 16px; border-radius:14px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); margin-bottom:10px; transition:.2s; }
+  .mat-card:hover{ background:rgba(255,255,255,.08); }
+  .mat-ic{ width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:20px; }
+  .mat-ic.video{ background:rgba(255,94,98,.18); color:#FFA3A5; }
+  .mat-ic.audio{ background:rgba(90,169,255,.18); color:#9CC8FF; }
+  .mat-ic.worksheet{ background:rgba(255,157,92,.18); color:#FFC79C; }
+  .mat-ic.doc{ background:rgba(45,212,191,.18); color:#7CEFDE; }
+  .mat-ic.other{ background:rgba(255,255,255,.1); color:var(--text-dim); }
+  .mat-body{ flex:1; min-width:0; }
+  .mat-body .t{ font-weight:600; font-size:14px; margin-bottom:2px; }
+  .mat-body .m{ font-size:11.5px; color:var(--text-dimmer); }
+  .mat-actions{ display:flex; gap:8px; flex-shrink:0; }
+  .icon-btn{ width:36px; height:36px; border-radius:10px; border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.06); color:var(--text-dim); display:flex; align-items:center; justify-content:center; cursor:pointer; text-decoration:none; transition:.2s; }
+  .icon-btn:hover{ background:rgba(255,255,255,.12); color:var(--text); }
+  .icon-btn.danger:hover{ color:#FF9494; border-color:rgba(255,90,90,.4); }
+
+  .ev-card{ display:flex; gap:14px; padding:13px 16px; border-radius:14px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); margin-bottom:9px; }
+  .ev-date{ width:52px; flex-shrink:0; text-align:center; background:linear-gradient(160deg, rgba(255,157,92,.28), rgba(255,94,98,.18)); border-radius:11px; padding:7px 4px; }
+  .ev-date .mo{ font-size:10px; text-transform:uppercase; color:#FFD9C2; letter-spacing:.4px; }
+  .ev-date .d{ font-family:'Fredoka'; font-size:18px; font-weight:600; }
+  .ev-body{ flex:1; min-width:0; }
+  .ev-body .t{ font-weight:600; font-size:14px; }
+  .ev-body .m{ font-size:11.5px; color:var(--text-dimmer); margin-top:2px; }
+  .ev-audience{ font-size:10px; padding:3px 8px; border-radius:7px; background:rgba(90,169,255,.18); color:#9CC8FF; font-weight:700; text-transform:uppercase; letter-spacing:.3px; height:fit-content; }
+  .reg-form .field{ margin-bottom:0; }
+
+  /* ---------- digital library ---------- */
+  .lib-toolbar{ display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+  .lib-toolbar .search-wrap{ position:relative; flex:1; min-width:200px; }
+  .lib-toolbar .search-wrap .icon{ position:absolute; left:13px; top:50%; transform:translateY(-50%); color:var(--text-dimmer); font-size:15px; }
+  .lib-toolbar .search-wrap input{ width:100%; padding-left:38px; }
+  .lib-toolbar select{ min-width:150px; }
+  .lib-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:14px; }
+  .book-card{ display:flex; flex-direction:column; gap:10px; padding:16px; border-radius:16px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); transition:.2s; }
+  .book-card:hover{ background:rgba(255,255,255,.08); transform:translateY(-2px); }
+  .book-top{ display:flex; align-items:flex-start; gap:12px; }
+  .book-ic{ width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:20px; }
+  .book-ic.textbook{ background:rgba(90,169,255,.18); color:#9CC8FF; }
+  .book-ic.teacher_guide{ background:rgba(176,139,255,.2); color:#CBB8FF; }
+  .book-title{ font-weight:600; font-size:14px; line-height:1.35; word-break:break-word; }
+  .book-meta{ font-size:11.5px; color:var(--text-dimmer); }
+  .book-badges{ display:flex; gap:6px; flex-wrap:wrap; }
+  .book-badge{ font-size:10px; padding:3px 8px; border-radius:7px; font-weight:700; text-transform:uppercase; letter-spacing:.3px; }
+  .book-badge.grade{ background:rgba(255,200,87,.16); color:#FFD98A; }
+  .book-badge.textbook{ background:rgba(90,169,255,.18); color:#9CC8FF; }
+  .book-badge.teacher_guide{ background:rgba(176,139,255,.2); color:#CBB8FF; }
+  .book-actions{ display:flex; gap:8px; margin-top:auto; }
+  .book-actions .btn{ flex:1; padding:9px 10px; font-size:12.5px; display:flex; align-items:center; justify-content:center; gap:6px; }
+
+  ::-webkit-scrollbar{ width:8px; height:8px; }
+  ::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.18); border-radius:10px; }
+  ::-webkit-scrollbar-track{ background:transparent; }
+</style>
+</head>
+<body>
+
+<svg style="position:absolute; width:0; height:0; overflow:hidden;" aria-hidden="true">
+  <defs>
+    <symbol id="i-flame" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 2c-1.6 2.6-4.5 4.6-4.5 8.4C7.5 14.6 9.4 17 12 17c2.7 0 5-2 5-4.9 0-1.4-.5-2.3-1-3 .1 1.7-.6 2.9-1.7 2.9-1.3 0-1.9-1.2-1.2-2.6C13.9 7.6 14.3 5 12 2z"/>
+      <path d="M9.3 15.2c.5 1.4 1.7 2.3 3 2.3s2.6-1 3-2.4c-.7.6-1.7 1-2.8 1-1.3 0-2.5-.4-3.2-.9z" opacity=".55"/>
+    </symbol>
+    <symbol id="i-backpack" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 7.5V6a3 3 0 0 1 6 0v1.5" />
+      <path d="M6 10.5a3 3 0 0 1 3-3h6a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3v-7z" />
+      <path d="M9.5 10.5v3.5h5v-3.5" />
+      <path d="M10.5 17.5h3" />
+    </symbol>
+    <symbol id="i-messages" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3.5 6.8A2.3 2.3 0 0 1 5.8 4.5h7.9a2.3 2.3 0 0 1 2.3 2.3v3.6a2.3 2.3 0 0 1-2.3 2.3H9.9l-2.9 2.4v-2.4H5.8a2.3 2.3 0 0 1-2.3-2.3V6.8z" opacity=".6"/>
+      <path d="M8.5 10.8a2.3 2.3 0 0 1 2.3-2.3h7.9a2.3 2.3 0 0 1 2.3 2.3v3.6a2.3 2.3 0 0 1-2.3 2.3h-.7v2.4l-2.9-2.4h-4.3a2.3 2.3 0 0 1-2.3-2.3v-3.6z"/>
+    </symbol>
+    <symbol id="i-school" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M2 8.5 12 4l10 4.5-10 4.5-10-4.5z"/>
+      <path d="M6.5 10.6v4c0 1.6 2.5 2.9 5.5 2.9s5.5-1.3 5.5-2.9v-4"/>
+      <path d="M21 8.5v6.2"/>
+    </symbol>
+    <symbol id="i-clipboard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6.5 5.5h-1A2 2 0 0 0 3.5 7.5v12a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-12a2 2 0 0 0-2-2h-1"/>
+      <path d="M8.7 3.5h6.6a1 1 0 0 1 1 1v1.6a1 1 0 0 1-1 1H8.7a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1z"/>
+      <path d="M7.5 12h9M7.5 15.5h9M7.5 19h5.5"/>
+    </symbol>
+    <symbol id="i-trophy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M7 4.5h10v4a5 5 0 0 1-10 0v-4z"/>
+      <path d="M7 5.5H4.5a2.7 2.7 0 0 0 2.7 4.3"/>
+      <path d="M17 5.5h2.5a2.7 2.7 0 0 1-2.7 4.3"/>
+      <path d="M12 13.5v3.3"/>
+      <path d="M8.7 20.5h6.6l-.8-3.2H9.5l-.8 3.2z"/>
+    </symbol>
+    <symbol id="i-trend" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3.5 16.5 9 11l3.5 3.5 8-8"/>
+      <path d="M15.5 6.5h5v5"/>
+    </symbol>
+    <symbol id="i-sparkles" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M11.5 3.5c.5 2.6 1.5 3.6 4.1 4.1-2.6.5-3.6 1.5-4.1 4.1-.5-2.6-1.5-3.6-4.1-4.1 2.6-.5 3.6-1.5 4.1-4.1z"/>
+      <path d="M18 12.5c.3 1.6.9 2.2 2.5 2.5-1.6.3-2.2.9-2.5 2.5-.3-1.6-.9-2.2-2.5-2.5 1.6-.3 2.2-.9 2.5-2.5z"/>
+      <path d="M7 14c.25 1.3.7 1.75 2 2-1.3.25-1.75.7-2 2-.25-1.3-.7-1.75-2-2 1.3-.25 1.75-.7 2-2z"/>
+    </symbol>
+    <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
+      <path d="M6 6l12 12M18 6 6 18"/>
+    </symbol>
+    <symbol id="i-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3.5 11.3 20.5 4l-6.8 17-3-8.2-7.2-3.5z"/>
+      <path d="M20.5 4 10.5 13.8"/>
+    </symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4.5 12.5 9.5 17.5 19.5 6.5"/>
+    </symbol>
+    <symbol id="i-tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12.4 3H19a1.5 1.5 0 0 1 1.5 1.5v6.6c0 .4-.16.78-.44 1.06l-8.9 8.9a1.5 1.5 0 0 1-2.12 0l-6.1-6.1a1.5 1.5 0 0 1 0-2.12l8.9-8.9c.28-.28.66-.44 1.06-.44z"/>
+      <circle cx="15.8" cy="7.7" r="1.3" fill="currentColor" stroke="none"/>
+    </symbol>
+    <symbol id="i-dot" viewBox="0 0 24 24" fill="currentColor">
+      <circle cx="12" cy="12" r="2.6"/>
+    </symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="5.5" y="10.5" width="13" height="9.5" rx="2"/>
+      <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/>
+      <circle cx="12" cy="15" r="1.4" fill="currentColor" stroke="none"/>
+    </symbol>
+    <symbol id="i-id" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="5.5" width="18" height="13" rx="2.2"/>
+      <circle cx="8.3" cy="11.6" r="1.9"/>
+      <path d="M5.3 16.2c.5-1.4 1.6-2.1 3-2.1s2.5.7 3 2.1"/>
+      <path d="M13.5 9.7h6M13.5 12.7h6M13.5 15.7h3.5"/>
+    </symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <path d="M12 5v14M5 12h14"/>
+    </symbol>
+    <symbol id="i-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 4.5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h3"/>
+      <path d="M14 15.5 18.5 12 14 8.5"/>
+      <path d="M18.2 12H9.5"/>
+    </symbol>
+    <symbol id="i-family" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="8" cy="8" r="2.3"/>
+      <path d="M3.7 18c.5-2.7 2-4.1 4.3-4.1s3.8 1.4 4.3 4.1"/>
+      <circle cx="17" cy="9" r="1.9"/>
+      <path d="M13.8 18c.4-2.2 1.6-3.3 3.2-3.3s2.8 1.1 3.2 3.3"/>
+    </symbol>
+    <symbol id="i-book" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 6.2C10.4 4.9 8.2 4.3 5.5 4.5a1 1 0 0 0-.9 1v12.3a1 1 0 0 0 1.1 1c2.3-.2 4.2.3 5.6 1.4a1 1 0 0 0 1.4 0c1.4-1.1 3.3-1.6 5.6-1.4a1 1 0 0 0 1.1-1V5.5a1 1 0 0 0-.9-1c-2.7-.2-4.9.4-6.5 1.7z"/>
+      <path d="M12 6.2v14"/>
+    </symbol>
+    <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="10.5" cy="10.5" r="6.5"/>
+      <path d="M20 20l-4.6-4.6"/>
+    </symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3.5" y="5.5" width="17" height="15" rx="2.2"/>
+      <path d="M3.5 10h17"/>
+      <path d="M8 3.5v4M16 3.5v4"/>
+      <path d="M7.5 14h3M13.5 14h3M7.5 17h3"/>
+    </symbol>
+    <symbol id="i-video" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="6" width="13" height="12" rx="2"/>
+      <path d="M16 10.2 21 7v10l-5-3.2"/>
+    </symbol>
+    <symbol id="i-audio" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 6.5 4 9v6l5 2.5V6.5z"/>
+      <path d="M15 9a4 4 0 0 1 0 6"/>
+      <path d="M17.8 6.7a8 8 0 0 1 0 10.6"/>
+    </symbol>
+    <symbol id="i-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6.5 3.5h8l4 4v13a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1v-16a1 1 0 0 1 1-1z"/>
+      <path d="M14 3.5v4h4"/>
+      <path d="M8.5 12.5h7M8.5 15.5h7M8.5 18h4"/>
+    </symbol>
+    <symbol id="i-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3.5v11.5"/>
+      <path d="M7.5 11 12 15.5 16.5 11"/>
+      <path d="M4.5 18h15"/>
+    </symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 15.5V4"/>
+      <path d="M7.5 8.5 12 4l4.5 4.5"/>
+      <path d="M4.5 18h15"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="blob blob-a"></div>
+<div class="blob blob-b"></div>
+<div class="blob blob-c"></div>
+<div class="watermark"></div>
+<svg class="study-bg" viewBox="0 0 380 380" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- floor / bench line -->
+  <path d="M20 300 H340" stroke="#C9C0E6" stroke-width="2" stroke-linecap="round"/>
+  <!-- open book between them -->
+  <path d="M150 300 C150 270 165 260 190 260 C215 260 230 270 230 300" stroke="#FFC857" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M190 260 V296" stroke="#FFC857" stroke-width="2.5"/>
+  <path d="M158 268 C170 264 180 264 188 267" stroke="#FFC857" stroke-width="2" stroke-linecap="round"/>
+  <path d="M222 268 C210 264 200 264 192 267" stroke="#FFC857" stroke-width="2" stroke-linecap="round"/>
+  <!-- student 1: sitting cross-legged, reading, left -->
+  <circle cx="95" cy="185" r="26" stroke="#5AA9FF" stroke-width="3"/>
+  <path d="M95 159 C88 148 78 146 72 150" stroke="#5AA9FF" stroke-width="3" stroke-linecap="round"/>
+  <path d="M69 226 C69 200 80 211 95 211 C110 211 121 200 121 226" stroke="#5AA9FF" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M69 226 C55 236 40 236 30 230" stroke="#5AA9FF" stroke-width="3" stroke-linecap="round"/>
+  <path d="M121 226 C135 236 150 236 160 230" stroke="#5AA9FF" stroke-width="3" stroke-linecap="round"/>
+  <path d="M40 300 C40 280 55 275 70 278 C85 281 90 295 90 300" stroke="#5AA9FF" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M85 220 C90 235 95 240 95 255" stroke="#5AA9FF" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M105 220 C102 235 100 240 100 255" stroke="#5AA9FF" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- student 2: sitting with laptop, right -->
+  <circle cx="290" cy="188" r="24" stroke="#FF9D5C" stroke-width="3"/>
+  <path d="M300 165 C308 156 310 150 305 143" stroke="#FF9D5C" stroke-width="3" stroke-linecap="round"/>
+  <path d="M266 227 C266 203 277 213 290 213 C303 213 314 203 314 227" stroke="#FF9D5C" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M266 227 C253 232 244 240 244 248" stroke="#FF9D5C" stroke-width="3" stroke-linecap="round"/>
+  <path d="M314 227 C327 232 336 240 336 248" stroke="#FF9D5C" stroke-width="3" stroke-linecap="round"/>
+  <rect x="255" y="248" width="70" height="6" rx="2" stroke="#FF9D5C" stroke-width="2.5"/>
+  <path d="M260 248 V236 H320 V248" stroke="#FF9D5C" stroke-width="2.5" stroke-linejoin="round"/>
+  <!-- floating sparkle + flame accents -->
+  <path d="M190 100 c.6 3.2 1.8 4.4 5 5 -3.2 .6 -4.4 1.8 -5 5 -.6-3.2-1.8-4.4-5-5 3.2-.6 4.4-1.8 5-5z" fill="#FFC857"/>
+  <path d="M52 130 c.4 2.2 1.2 3 3.4 3.4 -2.2.4-3 1.2-3.4 3.4-.4-2.2-1.2-3-3.4-3.4 2.2-.4 3-1.2 3.4-3.4z" fill="#2DD4BF"/>
+  <path d="M330 110c-1.1 1.8-3.1 3.2-3.1 6 0 2.9 1.9 4.9 3.4 4.9 1.8 0 3.4-1.4 3.4-3.3 0-.9-.3-1.6-.7-2 .1 1.1-.4 1.9-1.1 1.9-.9 0-1.3-.8-.8-1.7.6-1.1.8-2.6-1.1-5.8z" fill="#FF6F5E" opacity=".8"/>
+</svg>
+
+<!-- ================= LOGIN SCREEN ================= -->
+<div id="loginScreen">
+  <div class="card login-card">
+    <div class="login-brand"><div class="mark"><svg class="icon"><use href="#i-flame"/></svg></div>Studyo</div>
+    <p class="login-sub">Log in to your study space.</p>
+
+    <div class="login-tabs">
+      <button class="login-tab active" id="tabStudentBtn" onclick="setLoginTab('student')">
+        <svg class="icon"><use href="#i-backpack"/></svg> Student
+      </button>
+      <button class="login-tab" id="tabFamilyBtn" onclick="setLoginTab('family')">
+        <svg class="icon"><use href="#i-family"/></svg> Family
+      </button>
+      <button class="login-tab" id="tabStaffBtn" onclick="setLoginTab('staff')">
+        <svg class="icon"><use href="#i-school"/></svg> Staff & principal
+      </button>
+    </div>
+
+    <div class="error-box" id="loginError"></div>
+
+    <div class="login-pane active" id="paneStudent">
+      <div class="field">
+        <label>Student ID</label>
+        <input type="text" id="stuIdInput" placeholder="e.g. S-3001" />
+      </div>
+      <div class="field">
+        <label>Full name</label>
+        <input type="text" id="stuNameInput" placeholder="Exactly as your school registered you" onkeydown="if(event.key==='Enter')studentLogin()"/>
+      </div>
+      <button class="btn wide" onclick="studentLogin()">Log in</button>
+      <div class="demo-hint">New here? Ask your teacher or principal to register you first — you can't create your own account.<br><b>Demo:</b> S-3001 / Selam Tesfaye</div>
+    </div>
+
+    <div class="login-pane" id="paneFamily">
+      <div class="field">
+        <label>Family ID</label>
+        <input type="text" id="famIdInput" placeholder="e.g. F-5001" />
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="famPwInput" placeholder="••••••••" onkeydown="if(event.key==='Enter')familyLogin()"/>
+      </div>
+      <button class="btn wide" onclick="familyLogin()">Log in</button>
+      <div class="demo-hint">New here? A staff member links your family to your child's record and gives you this ID.<br><b>Demo:</b> F-5001 / family123</div>
+    </div>
+
+    <div class="login-pane" id="paneStaff">
+      <div class="field">
+        <label>Staff ID</label>
+        <input type="text" id="staffIdInput" placeholder="e.g. P-1001" />
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="staffPwInput" placeholder="••••••••" onkeydown="if(event.key==='Enter')staffLogin()"/>
+      </div>
+      <button class="btn wide" onclick="staffLogin()">Log in</button>
+      <div class="demo-hint"><b>Demo principal:</b> P-1001 / admin123<br><b>Demo teacher:</b> T-2001 / teach123</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= APP ================= -->
+<div id="app">
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="brand"><div class="mark"><svg class="icon"><use href="#i-flame"/></svg></div>Studyo</div>
+    <div class="roles" id="staffRoles" style="display:none;">
+      <button class="role-btn active" data-view="messages" onclick="switchStaffView('messages')"><svg class="icon"><use href="#i-messages"/></svg> Messages</button>
+      <button class="role-btn" data-view="materials" onclick="switchStaffView('materials')"><svg class="icon"><use href="#i-clipboard"/></svg> Materials</button>
+      <button class="role-btn" data-view="library" onclick="switchStaffView('library')"><svg class="icon"><use href="#i-book"/></svg> Library</button>
+      <button class="role-btn" data-view="calendar" onclick="switchStaffView('calendar')"><svg class="icon"><use href="#i-calendar"/></svg> Calendar</button>
+      <button class="role-btn" data-view="admin" onclick="switchStaffView('admin')"><svg class="icon"><use href="#i-school"/></svg> Admin</button>
+    </div>
+    <div class="topbar-right">
+      <div class="whoami"><b id="whoName">—</b><span id="whoRole">—</span></div>
+      <button class="btn ghost" onclick="logout()"><svg class="icon" style="margin-right:6px;"><use href="#i-logout"/></svg>Log out</button>
+    </div>
+  </div>
+
+  <!-- ================= STUDENT VIEW ================= -->
+  <div class="view" id="view-student">
+    <div class="card hero">
+      <div>
+        <h1 id="studentGreeting">Hey there</h1>
+        <p id="todoSummary">Loading your day...</p>
+      </div>
+      <div class="streak-chip">
+        <div class="flame-icon"><svg class="icon"><use href="#i-flame"/></svg></div>
+        <div>
+          <div class="streak-num" id="streakCount">—</div>
+          <div class="streak-label">day streak</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card panel">
+        <h2><svg class="icon"><use href="#i-clipboard"/></svg> Today's study list</h2>
+        <div class="week-row" id="weekRow"></div>
+        <div class="todo-input">
+          <input type="text" id="todoInput" placeholder="e.g. Review chapter 4 — algebra" onkeydown="if(event.key==='Enter')addTodo()"/>
+          <button class="btn" onclick="addTodo()">Add</button>
+        </div>
+        <div class="todo-list" id="todoList"></div>
+      </div>
+
+      <div class="card panel">
+        <h2><svg class="icon"><use href="#i-trophy"/></svg> Class rank <span id="lbClassLabel"></span></h2>
+        <div id="leaderboard"></div>
+      </div>
+    </div>
+
+    <div class="grid2" style="margin-top:20px;">
+      <div class="card panel">
+        <h2><svg class="icon"><use href="#i-doc"/></svg> Study materials for your class</h2>
+        <div id="studentMaterialsList"></div>
+      </div>
+      <div class="card panel">
+        <h2><svg class="icon"><use href="#i-calendar"/></svg> Upcoming events</h2>
+        <div id="studentEventsList"></div>
+      </div>
+    </div>
+
+    <div class="section-title" style="margin-top:20px;">
+      <h2 style="font-size:20px;"><svg class="icon" style="vertical-align:-3px; margin-right:6px;"><use href="#i-book"/></svg>Digital library</h2>
+      <span class="note" id="libGradeNote"></span>
+    </div>
+    <div class="card panel">
+      <div class="lib-toolbar">
+        <div class="search-wrap">
+          <svg class="icon"><use href="#i-search"/></svg>
+          <input type="text" id="libSearchStudent" placeholder="Search by title or subject..." oninput="renderStudentLibrary()"/>
+        </div>
+        <select id="libSubjectStudent" onchange="renderStudentLibrary()"><option value="">All subjects</option></select>
+      </div>
+      <div class="lib-grid" id="libGridStudent"></div>
+    </div>
+  </div>
+
+  <!-- ================= FAMILY VIEW ================= -->
+  <div class="view" id="view-family">
+    <div class="section-title">
+      <h2 style="font-size:20px;">Message the school</h2>
+      <span class="note">Staff will see your message tagged with your child's name and class.</span>
+    </div>
+    <div class="msg-shell">
+      <div class="card conv-list" id="famChildList"><h2>Your children</h2></div>
+      <div class="card chat-pane">
+        <div class="chat-top" id="famChatTop"><span class="note">Select a child</span></div>
+        <div class="chat-body" id="famChatBody"></div>
+        <div class="chat-input">
+          <input type="text" id="famChatInput" placeholder="Write a message to the school..." onkeydown="if(event.key==='Enter')sendFamilyMessage()"/>
+          <button class="btn" onclick="sendFamilyMessage()"><svg class="icon"><use href="#i-send"/></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title" style="margin-top:20px;"><h2 style="font-size:16px;">Upcoming events</h2></div>
+    <div class="card panel"><div id="familyEventsList"></div></div>
+  </div>
+
+  <!-- ================= STAFF: MESSAGES VIEW ================= -->
+  <div class="view" id="view-messages">
+    <div class="section-title">
+      <h2 style="font-size:20px;">Family ↔ school messages</h2>
+      <span class="note">Every message is tagged with the student's name and class, so staff always know whose family they're talking to.</span>
+    </div>
+    <div class="msg-shell">
+      <div class="card conv-list" id="convList"><h2>Conversations</h2></div>
+      <div class="card chat-pane">
+        <div class="chat-top" id="chatTop"><span class="note">Select a conversation</span></div>
+        <div class="chat-body" id="chatBody"></div>
+        <div class="chat-input">
+          <input type="text" id="chatInput" placeholder="Reply to the family..." onkeydown="if(event.key==='Enter')sendChat()"/>
+          <button class="btn" onclick="sendChat()"><svg class="icon"><use href="#i-send"/></svg></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= STAFF: MATERIALS VIEW ================= -->
+  <div class="view" id="view-materials">
+    <div class="section-title">
+      <h2 style="font-size:20px;">Study materials</h2>
+      <span class="note">Upload videos, audio, worksheets, or docs for a class — students in that class see them right away.</span>
+    </div>
+    <div class="card panel">
+      <h2><svg class="icon"><use href="#i-upload"/></svg> Upload material</h2>
+      <div class="error-box" id="matError"></div>
+      <div class="reg-form" style="grid-template-columns:1fr 1fr 1fr 1fr auto; align-items:end;">
+        <div class="field"><label>Title</label><input type="text" id="matTitle" placeholder="e.g. Chapter 5 video lesson"/></div>
+        <div class="field"><label>Class</label><input type="text" id="matClass" placeholder="e.g. 9B"/></div>
+        <div class="field">
+          <label>Type</label>
+          <select id="matTag">
+            <option value="video">Video</option>
+            <option value="audio">Audio</option>
+            <option value="worksheet">Worksheet</option>
+            <option value="doc">Document</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="field"><label>File</label><input type="file" id="matFile"/></div>
+        <button class="btn" onclick="uploadMaterial()"><svg class="icon" style="margin-right:6px;"><use href="#i-upload"/></svg>Upload</button>
+      </div>
+      <div class="field" style="margin-top:10px;">
+        <label>Description (optional)</label>
+        <input type="text" id="matDesc" placeholder="What's this material for?" style="width:100%;"/>
+      </div>
+    </div>
+
+    <div class="section-title" style="margin-top:20px;"><h2>All materials</h2></div>
+    <div id="materialsList"></div>
+  </div>
+
+  <!-- ================= STAFF: DIGITAL LIBRARY VIEW ================= -->
+  <div class="view" id="view-library">
+    <div class="section-title">
+      <h2 style="font-size:20px;">Digital library — textbooks &amp; teacher guides</h2>
+      <span class="note">PDF only. Every upload is tied to a grade level, so it shows up automatically for students in that grade.</span>
+    </div>
+    <div class="card panel">
+      <h2><svg class="icon"><use href="#i-upload"/></svg> Upload a resource</h2>
+      <div class="error-box" id="libError"></div>
+      <div class="reg-form" style="grid-template-columns:1.2fr 1fr 1fr .8fr 1fr auto;">
+        <div class="field"><label>Title</label><input type="text" id="libTitle" placeholder="e.g. Algebra Fundamentals"/></div>
+        <div class="field"><label>Subject</label><input type="text" id="libSubject" placeholder="e.g. Mathematics"/></div>
+        <div class="field">
+          <label>Resource type</label>
+          <select id="libResourceType">
+            <option value="textbook">Student textbook</option>
+            <option value="teacher_guide">Teacher guide</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Grade level</label>
+          <select id="libGradeLevel"></select>
+        </div>
+        <div class="field"><label>PDF file</label><input type="file" id="libFile" accept=".pdf,application/pdf"/></div>
+        <button class="btn" onclick="uploadLibraryItem()"><svg class="icon" style="margin-right:6px;"><use href="#i-upload"/></svg>Upload</button>
+      </div>
+    </div>
+
+    <div class="section-title" style="margin-top:20px;"><h2>All library resources</h2></div>
+    <div class="card panel">
+      <div class="lib-toolbar">
+        <div class="search-wrap">
+          <svg class="icon"><use href="#i-search"/></svg>
+          <input type="text" id="libSearchStaff" placeholder="Search by title or subject..." oninput="renderStaffLibrary()"/>
+        </div>
+        <select id="libGradeFilterStaff" onchange="renderStaffLibrary()"><option value="">All grades</option></select>
+      </div>
+      <div class="lib-grid" id="libGridStaff"></div>
+    </div>
+  </div>
+
+  <!-- ================= STAFF: CALENDAR VIEW ================= -->
+  <div class="view" id="view-calendar">
+    <div class="section-title">
+      <h2 style="font-size:20px;">School calendar</h2>
+      <span class="note" id="calendarNote">Events the principal posts show up for everyone, or just one class.</span>
+    </div>
+    <div class="card panel" id="calendarFormCard" style="display:none;">
+      <h2><svg class="icon"><use href="#i-calendar"/></svg> Post an event</h2>
+      <div class="error-box" id="evError"></div>
+      <div class="reg-form" style="grid-template-columns:1.3fr 1fr .8fr 1fr auto; align-items:end;">
+        <div class="field"><label>Title</label><input type="text" id="evTitle" placeholder="e.g. Sports day"/></div>
+        <div class="field"><label>Date</label><input type="date" id="evDate"/></div>
+        <div class="field"><label>Time (optional)</label><input type="time" id="evTime"/></div>
+        <div class="field"><label>Audience</label><input type="text" id="evAudience" placeholder="'all' or a class e.g. 9B"/></div>
+        <button class="btn" onclick="createEvent()"><svg class="icon" style="margin-right:6px;"><use href="#i-plus"/></svg>Post</button>
+      </div>
+      <div class="field" style="margin-top:10px;">
+        <label>Description (optional)</label>
+        <input type="text" id="evDesc" placeholder="Details for this event" style="width:100%;"/>
+      </div>
+    </div>
+    <div id="calendarList"></div>
+  </div>
+
+  <!-- ================= STAFF: ADMIN VIEW ================= -->
+  <div class="view" id="view-admin">
+    <div class="stat-grid" id="statGrid"></div>
+
+    <div class="card panel">
+      <h2><svg class="icon"><use href="#i-id"/></svg> Register a new student</h2>
+      <div class="error-box" id="regError"></div>
+      <div class="reg-form" style="grid-template-columns:1fr 1fr 1fr .8fr 1fr auto;">
+        <div class="field"><label>Student ID</label><input type="text" id="regId" placeholder="e.g. S-4002"/></div>
+        <div class="field"><label>Full name</label><input type="text" id="regName" placeholder="e.g. Hana Worku"/></div>
+        <div class="field"><label>Class</label><input type="text" id="regClass" placeholder="e.g. 6A"/></div>
+        <div class="field">
+          <label>Gender</label>
+          <select id="regGender">
+            <option value="female">Female</option>
+            <option value="male">Male</option>
+          </select>
+        </div>
+        <div class="field"><label>Profile picture (optional)</label><input type="file" id="regPhoto" accept="image/jpeg,image/png"/></div>
+        <button class="btn" onclick="registerStudent()"><svg class="icon" style="margin-right:6px;"><use href="#i-plus"/></svg>Register</button>
+      </div>
+    </div>
+
+    <div class="card panel" style="margin-top:16px;">
+      <h2><svg class="icon"><use href="#i-family"/></svg> Link a family account</h2>
+      <p class="note" style="margin:-8px 0 14px;">Gives a parent/guardian their own login, tied to one student. Run it again with the same family ID to link a sibling.</p>
+      <div class="error-box" id="famRegError"></div>
+      <div class="reg-form" style="grid-template-columns:1fr 1fr 1fr 1fr auto;">
+        <div class="field"><label>Family ID</label><input type="text" id="famRegId" placeholder="e.g. F-5003"/></div>
+        <div class="field"><label>Family name</label><input type="text" id="famRegName" placeholder="e.g. Worku Family"/></div>
+        <div class="field"><label>Password</label><input type="password" id="famRegPw" placeholder="Set a password"/></div>
+        <div class="field"><label>Student ID to link</label><input type="text" id="famRegStudentId" placeholder="e.g. S-4002"/></div>
+        <button class="btn" onclick="registerFamily()"><svg class="icon" style="margin-right:6px;"><use href="#i-plus"/></svg>Link</button>
+      </div>
+    </div>
+
+    <div class="card panel" id="staffRegCard" style="margin-top:16px; display:none;">
+      <h2><svg class="icon"><use href="#i-school"/></svg> Register a new teacher / staff member</h2>
+      <p class="note" style="margin:-8px 0 14px;">Only the principal can do this. New staff log in with the ID + password you set here.</p>
+      <div class="error-box" id="staffRegError"></div>
+      <div class="reg-form" style="grid-template-columns:1fr 1fr 1fr .8fr auto;">
+        <div class="field"><label>Staff ID</label><input type="text" id="staffRegId" placeholder="e.g. T-2003"/></div>
+        <div class="field"><label>Full name</label><input type="text" id="staffRegName" placeholder="e.g. Mr. Girma"/></div>
+        <div class="field"><label>Password</label><input type="password" id="staffRegPw" placeholder="Set a password"/></div>
+        <div class="field">
+          <label>Role</label>
+          <select id="staffRegRole">
+            <option value="teacher">Teacher</option>
+            <option value="director">Director</option>
+            <option value="principal">Principal</option>
+          </select>
+        </div>
+        <button class="btn" onclick="registerStaff()"><svg class="icon" style="margin-right:6px;"><use href="#i-plus"/></svg>Register</button>
+      </div>
+    </div>
+
+    <div class="section-title" style="margin-top:20px;">
+      <h2>Student directory</h2>
+      <span class="note">Search, sort, and filter every registered student.</span>
+    </div>
+    <div class="card panel">
+      <div class="lib-toolbar">
+        <div class="search-wrap">
+          <svg class="icon"><use href="#i-search"/></svg>
+          <input type="text" id="dirSearch" placeholder="Search by name or student ID..." oninput="renderDirectory()"/>
+        </div>
+        <select id="dirSort" onchange="renderDirectory()">
+          <option value="az">Name A → Z</option>
+          <option value="za">Name Z → A</option>
+        </select>
+        <select id="dirGrade" onchange="renderDirectory()"><option value="">All grades</option></select>
+        <select id="dirSection" onchange="renderDirectory()"><option value="">All sections</option></select>
+        <select id="dirGender" onchange="renderDirectory()">
+          <option value="">All genders</option>
+          <option value="female">Female</option>
+          <option value="male">Male</option>
+        </select>
+      </div>
+      <table>
+        <thead><tr><th></th><th>Student</th><th>Class</th><th>Gender</th><th>Streak</th><th>Points</th><th id="stuActionsHead" style="display:none;"></th></tr></thead>
+        <tbody id="adminTable"></tbody>
+      </table>
+    </div>
+
+    <div class="section-title" style="margin-top:20px;"><h2>Staff</h2></div>
+    <div class="card panel">
+      <table>
+        <thead><tr><th>Name</th><th>Staff ID</th><th>Role</th><th id="staffActionsHead" style="display:none;"></th></tr></thead>
+        <tbody id="staffTable"></tbody>
+      </table>
+    </div>
+
+    <div class="section-title" style="margin-top:20px;"><h2>Linked families</h2></div>
+    <div class="card panel">
+      <table>
+        <thead><tr><th>Family</th><th>Family ID</th><th>Linked children</th></tr></thead>
+        <tbody id="familyTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<button class="ai-fab" onclick="toggleAI()" id="aiFab" style="display:none;"><div class="pulse"></div><svg class="icon"><use href="#i-sparkles"/></svg></button>
+<div class="card ai-panel" id="aiPanel">
+  <div class="ai-head">
+    <div class="dot"></div>
+    <div><b>Study buddy</b><span>always here to help you plan</span></div>
+    <button class="ai-close" onclick="toggleAI()"><svg class="icon"><use href="#i-x"/></svg></button>
+  </div>
+  <div class="ai-body" id="aiBody">
+    <div class="msg bot">Hi! Ask me anything about today's study list.</div>
+  </div>
+  <div class="ai-foot">
+    <input type="text" id="aiInput" placeholder="Ask your study buddy..." onkeydown="if(event.key==='Enter')sendAI()"/>
+    <button class="btn" onclick="sendAI()"><svg class="icon"><use href="#i-send"/></svg></button>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   API layer — everything below talks to the real backend in /backend.
+   Change API_BASE if you deploy the backend somewhere other than
+   localhost:4001.
+   ===================================================================== */
+const API_BASE = 'https://studyofl-backend.onrender.com';
+let TOKEN = localStorage.getItem('studyo_token') || null;
+let ME = null; // { type: 'student'|'staff', profile: {...} }
+
+async function api(path, opts = {}) {
+  const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
+  if (TOKEN) headers['Authorization'] = 'Bearer ' + TOKEN;
+  const res = await fetch(API_BASE + path, { ...opts, headers });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Something went wrong.');
+  return data;
+}
+
+/* ---------------- login screen ---------------- */
+function setLoginTab(which) {
+  document.getElementById('tabStudentBtn').classList.toggle('active', which === 'student');
+  document.getElementById('tabFamilyBtn').classList.toggle('active', which === 'family');
+  document.getElementById('tabStaffBtn').classList.toggle('active', which === 'staff');
+  document.getElementById('paneStudent').classList.toggle('active', which === 'student');
+  document.getElementById('paneFamily').classList.toggle('active', which === 'family');
+  document.getElementById('paneStaff').classList.toggle('active', which === 'staff');
+  hideLoginError();
+}
+function showLoginError(msg) {
+  const el = document.getElementById('loginError');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+function hideLoginError() {
+  document.getElementById('loginError').classList.remove('show');
+}
+
+async function studentLogin() {
+  hideLoginError();
+  const studentId = document.getElementById('stuIdInput').value.trim();
+  const name = document.getElementById('stuNameInput').value.trim();
+  if (!studentId || !name) return showLoginError('Enter your student ID and full name.');
+  try {
+    const data = await api('/api/auth/student/login', { method: 'POST', body: JSON.stringify({ studentId, name }) });
+    TOKEN = data.token;
+    localStorage.setItem('studyo_token', TOKEN);
+    await bootApp();
+  } catch (e) {
+    showLoginError(e.message);
+  }
+}
+
+async function staffLogin() {
+  hideLoginError();
+  const staffId = document.getElementById('staffIdInput').value.trim();
+  const password = document.getElementById('staffPwInput').value;
+  if (!staffId || !password) return showLoginError('Enter your staff ID and password.');
+  try {
+    const data = await api('/api/auth/staff/login', { method: 'POST', body: JSON.stringify({ staffId, password }) });
+    TOKEN = data.token;
+    localStorage.setItem('studyo_token', TOKEN);
+    await bootApp();
+  } catch (e) {
+    showLoginError(e.message);
+  }
+}
+
+async function familyLogin() {
+  hideLoginError();
+  const familyId = document.getElementById('famIdInput').value.trim();
+  const password = document.getElementById('famPwInput').value;
+  if (!familyId || !password) return showLoginError('Enter your family ID and password.');
+  try {
+    const data = await api('/api/auth/family/login', { method: 'POST', body: JSON.stringify({ familyId, password }) });
+    TOKEN = data.token;
+    localStorage.setItem('studyo_token', TOKEN);
+    await bootApp();
+  } catch (e) {
+    showLoginError(e.message);
+  }
+}
+
+function logout() {
+  TOKEN = null;
+  localStorage.removeItem('studyo_token');
+  ME = null;
+  stopPolling();
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('aiFab').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+}
+
+/* ---------------- live-updating: simple polling ---------------- */
+let pollTimer = null;
+function startPolling(fn, intervalMs) {
+  stopPolling();
+  pollTimer = setInterval(fn, intervalMs || 6000);
+}
+function stopPolling() {
+  if (pollTimer) clearInterval(pollTimer);
+  pollTimer = null;
+}
+
+/* ---------------- boot / routing ---------------- */
+async function bootApp() {
+  try {
+    const me = await api('/api/me');
+    ME = me;
+  } catch (e) {
+    return logout();
+  }
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+
+  if (ME.type === 'student') {
+    document.getElementById('staffRoles').style.display = 'none';
+    document.getElementById('aiFab').style.display = 'flex';
+    document.getElementById('whoName').textContent = ME.profile.name;
+    document.getElementById('whoRole').textContent = 'Student · ' + ME.profile.class;
+    showView('student');
+    await loadStudentDashboard();
+    startPolling(loadStudentDashboard, 8000);
+  } else if (ME.type === 'family') {
+    document.getElementById('staffRoles').style.display = 'none';
+    document.getElementById('aiFab').style.display = 'none';
+    document.getElementById('whoName').textContent = ME.profile.name;
+    document.getElementById('whoRole').textContent = 'Family';
+    showView('family');
+    await loadFamilyDashboard();
+    startPolling(loadFamilyDashboard, 5000);
+  } else {
+    document.getElementById('staffRoles').style.display = 'flex';
+    document.getElementById('aiFab').style.display = 'none';
+    document.getElementById('whoName').textContent = ME.profile.name;
+    document.getElementById('whoRole').textContent = ME.profile.role.charAt(0).toUpperCase() + ME.profile.role.slice(1);
+    switchStaffView('messages');
+  }
+}
+
+function showView(name) {
+  document.querySelectorAll('.view').forEach((v) => v.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+}
+function switchStaffView(name) {
+  showView(name);
+  document.querySelectorAll('#staffRoles .role-btn').forEach((b) => b.classList.toggle('active', b.dataset.view === name));
+  if (name === 'messages') { loadMessages(); startPolling(loadMessages, 5000); }
+  if (name === 'materials') { loadMaterialsStaff(); startPolling(loadMaterialsStaff, 8000); }
+  if (name === 'library') { loadStaffLibrary(); startPolling(loadStaffLibrary, 8000); }
+  if (name === 'calendar') { loadCalendarStaff(); startPolling(loadCalendarStaff, 8000); }
+  if (name === 'admin') { loadAdmin(); stopPolling(); }
+}
+
+/* ---------------- student: dashboard ---------------- */
+const avatarColors = ['linear-gradient(135deg,#FF9D5C,#FF5E62)','linear-gradient(135deg,#5AA9FF,#7F77DD)','linear-gradient(135deg,#2DD4BF,#57e6d3)','linear-gradient(135deg,#FFC857,#FF9D5C)','linear-gradient(135deg,#D4537E,#993556)'];
+const weekLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+async function loadStudentDashboard() {
+  document.getElementById('studentGreeting').textContent = 'Hey ' + ME.profile.name.split(' ')[0];
+  await Promise.all([renderTodos(), renderWeekAndStreak(), renderLeaderboard(), renderStudentMaterials(), renderStudentEvents(), loadStudentLibrary()]);
+}
+
+async function renderTodos() {
+  const { todos } = await api('/api/todos');
+  const list = document.getElementById('todoList');
+  list.innerHTML = '';
+  if (todos.length === 0) list.innerHTML = '<div class="empty">Nothing on your list yet — add your first task above.</div>';
+  todos.forEach((t) => {
+    const row = document.createElement('div');
+    row.className = 'todo' + (t.done ? ' done' : '');
+    row.innerHTML = `
+      <div class="check ${t.done ? 'on' : ''}" onclick="toggleTodo('${t.id}')">${t.done ? '<svg class="icon"><use href="#i-check"/></svg>' : ''}</div>
+      <div class="todo-text">${escapeHtml(t.text)}</div>
+      <div class="tag ${t.tag}">${t.tag}</div>
+      <button class="rm" onclick="removeTodo('${t.id}')"><svg class="icon"><use href="#i-x"/></svg></button>`;
+    list.appendChild(row);
+  });
+  const done = todos.filter((t) => t.done).length;
+  document.getElementById('todoSummary').textContent = todos.length
+    ? `${done} of ${todos.length} tasks done today — keep the flame going`
+    : 'Add a task to get your streak started today.';
+}
+
+async function toggleTodo(id) { await api('/api/todos/' + id, { method: 'PATCH' }); await renderTodos(); await renderWeekAndStreak(); await renderLeaderboard(); }
+async function removeTodo(id) { await api('/api/todos/' + id, { method: 'DELETE' }); await renderTodos(); }
+async function addTodo() {
+  const input = document.getElementById('todoInput');
+  const val = input.value.trim();
+  if (!val) return;
+  const tags = ['math','sci','lang','hist'];
+  await api('/api/todos', { method: 'POST', body: JSON.stringify({ text: val, tag: tags[Math.floor(Math.random()*tags.length)] }) });
+  input.value = '';
+  await renderTodos();
+}
+
+async function renderWeekAndStreak() {
+  const { week, streakCount } = await api('/api/streak');
+  document.getElementById('streakCount').textContent = streakCount;
+  const row = document.getElementById('weekRow');
+  row.innerHTML = '';
+  const todayIso = new Date().toISOString().slice(0, 10);
+  week.forEach((d, i) => {
+    const el = document.createElement('div');
+    el.className = 'day' + (d.done ? ' done' : '') + (d.date === todayIso ? ' today' : '');
+    el.innerHTML = `<div>${weekLabels[i]}</div><div class="d">${d.done ? '<svg class="icon"><use href="#i-flame"/></svg>' : '<svg class="icon"><use href="#i-dot"/></svg>'}</div>`;
+    row.appendChild(el);
+  });
+}
+
+async function renderLeaderboard() {
+  const { leaderboard } = await api('/api/leaderboard');
+  document.getElementById('lbClassLabel').textContent = ME.profile.class ? '— Grade ' + ME.profile.class : '';
+  const box = document.getElementById('leaderboard');
+  box.innerHTML = '';
+  leaderboard.forEach((l, i) => {
+    const isMe = ME.type === 'student' && l.studentId === ME.profile.studentId;
+    const row = document.createElement('div');
+    row.className = 'lb-item' + (isMe ? ' me' : '');
+    row.innerHTML = `
+      <div class="rank-num ${i === 0 ? 'top' : ''}">${i + 1}</div>
+      <div class="avatar" style="background:${avatarColors[i % avatarColors.length]}">${initials(l.name)}</div>
+      <div class="lb-name"><div class="n">${escapeHtml(l.name)}${isMe ? ' (you)' : ''}</div><div class="p">${l.class}</div></div>
+      <div class="pts">${l.points} pts</div>`;
+    box.appendChild(row);
+  });
+}
+
+function initials(name) { return name.split(' ').map((w) => w[0]).join('').slice(0, 2); }
+function escapeHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+/* ---------------- shared: materials + calendar rendering ---------------- */
+const TAG_ICON = { video: 'i-video', audio: 'i-audio', worksheet: 'i-clipboard', doc: 'i-doc', other: 'i-doc' };
+function humanSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return Math.round(bytes / 1024) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+function fileUrl(m) { return API_BASE + m.url + '?token=' + encodeURIComponent(TOKEN); }
+
+function materialCardHtml(m, showDelete) {
+  const icon = TAG_ICON[m.tag] || 'i-doc';
+  return `
+    <div class="mat-card">
+      <div class="mat-ic ${m.tag}"><svg class="icon"><use href="#${icon}"/></svg></div>
+      <div class="mat-body">
+        <div class="t">${escapeHtml(m.title)}</div>
+        <div class="m">${escapeHtml(m.class)} · ${m.tag} · ${humanSize(m.size)} · by ${escapeHtml(m.uploadedBy)}${m.description ? ' · ' + escapeHtml(m.description) : ''}</div>
+      </div>
+      <div class="mat-actions">
+        <a class="icon-btn" href="${fileUrl(m)}" target="_blank" rel="noopener" title="Open"><svg class="icon"><use href="#i-download"/></svg></a>
+        ${showDelete ? `<button class="icon-btn danger" onclick="deleteMaterial('${m.id}')" title="Delete"><svg class="icon"><use href="#i-x"/></svg></button>` : ''}
+      </div>
+    </div>`;
+}
+
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function eventCardHtml(e, showDelete) {
+  const d = new Date(e.date + 'T00:00:00');
+  return `
+    <div class="ev-card">
+      <div class="ev-date"><div class="mo">${MONTHS[d.getMonth()]}</div><div class="d">${d.getDate()}</div></div>
+      <div class="ev-body">
+        <div class="t">${escapeHtml(e.title)}${e.time ? ' · ' + escapeHtml(e.time) : ''}</div>
+        <div class="m">${e.description ? escapeHtml(e.description) : 'No further details.'}</div>
+      </div>
+      <span class="ev-audience">${e.audience === 'all' ? 'Whole school' : escapeHtml(e.audience)}</span>
+      ${showDelete ? `<button class="icon-btn danger" onclick="deleteEvent('${e.id}')" title="Remove"><svg class="icon"><use href="#i-x"/></svg></button>` : ''}
+    </div>`;
+}
+
+async function renderStudentMaterials() {
+  const { materials } = await api('/api/materials');
+  const box = document.getElementById('studentMaterialsList');
+  box.innerHTML = materials.length ? materials.map((m) => materialCardHtml(m, false)).join('') : '<div class="empty">Nothing uploaded for your class yet.</div>';
+}
+async function renderStudentEvents() {
+  const { events } = await api('/api/calendar');
+  const box = document.getElementById('studentEventsList');
+  box.innerHTML = events.length ? events.map((e) => eventCardHtml(e, false)).join('') : '<div class="empty">No upcoming events.</div>';
+}
+async function renderFamilyEvents() {
+  const { events } = await api('/api/calendar');
+  const box = document.getElementById('familyEventsList');
+  box.innerHTML = events.length ? events.map((e) => eventCardHtml(e, false)).join('') : '<div class="empty">No upcoming events.</div>';
+}
+
+/* ---------------- digital library ---------------- */
+const RESOURCE_LABEL = { textbook: 'Textbook', teacher_guide: 'Teacher guide' };
+let libraryDataStudent = [];
+let libraryDataStaff = [];
+
+function libFileUrl(path) {
+  const sep = path.includes('?') ? '&' : '?';
+  return API_BASE + path + sep + 'token=' + encodeURIComponent(TOKEN);
+}
+
+function bookCardHtml(it, showDelete) {
+  return `
+    <div class="book-card">
+      <div class="book-top">
+        <div class="book-ic ${it.resourceType}"><svg class="icon"><use href="#i-book"/></svg></div>
+        <div>
+          <div class="book-title">${escapeHtml(it.title)}</div>
+          <div class="book-meta">${escapeHtml(it.subject)} · ${humanSize(it.size)}</div>
+        </div>
+      </div>
+      <div class="book-badges">
+        <span class="book-badge grade">Grade ${it.gradeLevel}</span>
+        <span class="book-badge ${it.resourceType}">${RESOURCE_LABEL[it.resourceType]}</span>
+      </div>
+      <div class="book-actions">
+        <a class="btn ghost" href="${libFileUrl(it.viewUrl)}" target="_blank" rel="noopener">View</a>
+        <a class="btn" href="${libFileUrl(it.downloadUrl)}" target="_blank" rel="noopener">Download</a>
+        ${showDelete ? `<button class="icon-btn danger" onclick="deleteLibraryItem('${it.id}')" title="Delete"><svg class="icon"><use href="#i-x"/></svg></button>` : ''}
+      </div>
+    </div>`;
+}
+
+function populateSubjectFilter(selectId, items) {
+  const sel = document.getElementById(selectId);
+  const current = sel.value;
+  const subjects = [...new Set(items.map((it) => it.subject))].sort();
+  sel.innerHTML = '<option value="">All subjects</option>' + subjects.map((s) => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+  if (subjects.includes(current)) sel.value = current;
+}
+
+async function loadStudentLibrary() {
+  const { items } = await api('/api/library');
+  libraryDataStudent = items;
+  const grade = ME.profile.class ? (String(ME.profile.class).match(/(\d{1,2})/) || [])[1] : null;
+  document.getElementById('libGradeNote').textContent = grade ? `Showing resources for Grade ${grade}` : '';
+  populateSubjectFilter('libSubjectStudent', items);
+  renderStudentLibrary();
+}
+
+function renderStudentLibrary() {
+  const search = document.getElementById('libSearchStudent').value.trim().toLowerCase();
+  const subject = document.getElementById('libSubjectStudent').value;
+  const filtered = libraryDataStudent.filter((it) => {
+    const matchesSearch = !search || it.title.toLowerCase().includes(search) || it.subject.toLowerCase().includes(search);
+    const matchesSubject = !subject || it.subject === subject;
+    return matchesSearch && matchesSubject;
+  });
+  const box = document.getElementById('libGridStudent');
+  box.innerHTML = filtered.length ? filtered.map((it) => bookCardHtml(it, false)).join('') : '<div class="empty">No library resources match yet.</div>';
+}
+
+function fillGradeLevelSelect() {
+  const sel = document.getElementById('libGradeLevel');
+  if (!sel || sel.options.length) return;
+  sel.innerHTML = Array.from({ length: 12 }, (_, i) => i + 1).map((g) => `<option value="${g}">Grade ${g}</option>`).join('');
+}
+
+async function loadStaffLibrary() {
+  fillGradeLevelSelect();
+  const { items } = await api('/api/library');
+  libraryDataStaff = items;
+  const gradeSel = document.getElementById('libGradeFilterStaff');
+  const currentGrade = gradeSel.value;
+  gradeSel.innerHTML = '<option value="">All grades</option>' + Array.from({ length: 12 }, (_, i) => i + 1).map((g) => `<option value="${g}">Grade ${g}</option>`).join('');
+  if (currentGrade) gradeSel.value = currentGrade;
+  renderStaffLibrary();
+}
+
+function renderStaffLibrary() {
+  const search = document.getElementById('libSearchStaff').value.trim().toLowerCase();
+  const gradeFilter = document.getElementById('libGradeFilterStaff').value;
+  const filtered = libraryDataStaff.filter((it) => {
+    const matchesSearch = !search || it.title.toLowerCase().includes(search) || it.subject.toLowerCase().includes(search);
+    const matchesGrade = !gradeFilter || String(it.gradeLevel) === gradeFilter;
+    return matchesSearch && matchesGrade;
+  });
+  const box = document.getElementById('libGridStaff');
+  box.innerHTML = filtered.length ? filtered.map((it) => bookCardHtml(it, true)).join('') : '<div class="empty">No resources uploaded yet.</div>';
+}
+
+function hideLibError() { document.getElementById('libError').classList.remove('show'); }
+function showLibError(msg) { const el = document.getElementById('libError'); el.textContent = msg; el.classList.add('show'); }
+
+async function uploadLibraryItem() {
+  hideLibError();
+  const title = document.getElementById('libTitle').value.trim();
+  const subject = document.getElementById('libSubject').value.trim();
+  const resourceType = document.getElementById('libResourceType').value;
+  const gradeLevel = document.getElementById('libGradeLevel').value;
+  const fileInput = document.getElementById('libFile');
+  const file = fileInput.files[0];
+  if (!title || !subject || !file) return showLibError('Fill in a title, subject, and choose a PDF file.');
+  if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') return showLibError('Only PDF files are allowed in the library.');
+
+  const form = new FormData();
+  form.append('title', title);
+  form.append('subject', subject);
+  form.append('resourceType', resourceType);
+  form.append('gradeLevel', gradeLevel);
+  form.append('file', file);
+
+  try {
+    const res = await fetch(API_BASE + '/api/staff/library', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + TOKEN },
+      body: form,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Upload failed.');
+    document.getElementById('libTitle').value = '';
+    document.getElementById('libSubject').value = '';
+    fileInput.value = '';
+    await loadStaffLibrary();
+  } catch (e) {
+    showLibError(e.message);
+  }
+}
+
+async function deleteLibraryItem(id) {
+  if (!confirm('Remove this resource from the library? This can\'t be undone.')) return;
+  await api('/api/staff/library/' + id, { method: 'DELETE' });
+  await loadStaffLibrary();
+}
+
+/* ---------------- AI assistant (student) ---------------- */
+function toggleAI() { document.getElementById('aiPanel').classList.toggle('open'); }
+async function sendAI() {
+  const input = document.getElementById('aiInput');
+  const val = input.value.trim();
+  if (!val) return;
+  const body = document.getElementById('aiBody');
+  const u = document.createElement('div'); u.className = 'msg user'; u.textContent = val;
+  body.appendChild(u);
+  input.value = '';
+  body.scrollTop = body.scrollHeight;
+  try {
+    const { reply } = await api('/api/assistant', { method: 'POST', body: JSON.stringify({ message: val }) });
+    const b = document.createElement('div'); b.className = 'msg bot'; b.textContent = reply;
+    body.appendChild(b);
+  } catch (e) {
+    const b = document.createElement('div'); b.className = 'msg bot'; b.textContent = "Sorry, I couldn't reach the study buddy service just now.";
+    body.appendChild(b);
+  }
+  body.scrollTop = body.scrollHeight;
+}
+
+/* ---------------- staff: messages ---------------- */
+let messagesData = [];
+let activeStudentId = null;
+
+async function loadMessages() {
+  const { messages } = await api('/api/staff/messages');
+  messagesData = messages;
+  const byStudent = {};
+  messages.forEach((m) => { (byStudent[m.studentId] = byStudent[m.studentId] || []).push(m); });
+  if (!activeStudentId || !byStudent[activeStudentId]) activeStudentId = Object.keys(byStudent)[0] || null;
+  renderConvList(byStudent);
+  renderChat(byStudent);
+}
+
+function renderConvList(byStudent) {
+  const box = document.getElementById('convList');
+  box.innerHTML = '<h2>Conversations</h2>';
+  Object.entries(byStudent).forEach(([studentId, msgs]) => {
+    const last = msgs[msgs.length - 1];
+    const el = document.createElement('div');
+    el.className = 'conv' + (studentId === activeStudentId ? ' active' : '');
+    el.innerHTML = `
+      <div class="txt">
+        <div class="idbadge"><svg class="icon"><use href="#i-tag"/></svg> ${escapeHtml(last.studentName)} · ${escapeHtml(last.studentClass)}</div>
+        <div class="prev">${escapeHtml(last.body)}</div>
+      </div>`;
+    el.onclick = () => { activeStudentId = studentId; loadMessages(); };
+    box.appendChild(el);
+  });
+  if (Object.keys(byStudent).length === 0) box.innerHTML += '<div class="empty">No messages yet.</div>';
+}
+
+function renderChat(byStudent) {
+  const top = document.getElementById('chatTop');
+  const body = document.getElementById('chatBody');
+  if (!activeStudentId) { top.innerHTML = '<span class="note">Select a conversation</span>'; body.innerHTML = ''; return; }
+  const msgs = byStudent[activeStudentId] || [];
+  const last = msgs[msgs.length - 1];
+  top.innerHTML = `<div class="who"><b>${escapeHtml(last.studentName)}'s family</b><span class="idbadge"><svg class="icon"><use href="#i-tag"/></svg> ${escapeHtml(last.studentName)} · ${escapeHtml(last.studentClass)}</span></div>`;
+  body.innerHTML = '';
+  msgs.forEach((m) => {
+    const el = document.createElement('div');
+    el.className = 'bubble ' + (m.direction === 'in' ? 'in' : 'out');
+    el.innerHTML = `${escapeHtml(m.body)}<div class="meta">${m.direction === 'in' ? m.from : 'You'} · ${new Date(m.time).toLocaleString()}</div>`;
+    body.appendChild(el);
+  });
+  body.scrollTop = body.scrollHeight;
+}
+
+async function sendChat() {
+  const input = document.getElementById('chatInput');
+  const val = input.value.trim();
+  if (!val || !activeStudentId) return;
+  await api(`/api/staff/messages/${activeStudentId}/reply`, { method: 'POST', body: JSON.stringify({ body: val }) });
+  input.value = '';
+  await loadMessages();
+}
+
+/* ---------------- family: message the school ---------------- */
+let activeFamilyChildId = null;
+
+async function loadFamilyDashboard() {
+  if (!activeFamilyChildId && ME.profile.students.length) activeFamilyChildId = ME.profile.students[0].studentId;
+  renderFamilyChildList();
+  await Promise.all([renderFamilyChat(), renderFamilyEvents()]);
+}
+
+function renderFamilyChildList() {
+  const box = document.getElementById('famChildList');
+  box.innerHTML = '<h2>Your children</h2>';
+  ME.profile.students.forEach((s) => {
+    const el = document.createElement('div');
+    el.className = 'conv' + (s.studentId === activeFamilyChildId ? ' active' : '');
+    el.innerHTML = `
+      <div class="txt">
+        <div class="idbadge"><svg class="icon"><use href="#i-tag"/></svg> ${escapeHtml(s.name)} · ${escapeHtml(s.class)}</div>
+        <div class="prev">Tap to see messages</div>
+      </div>`;
+    el.onclick = () => { activeFamilyChildId = s.studentId; renderFamilyChildList(); renderFamilyChat(); };
+    box.appendChild(el);
+  });
+  if (ME.profile.students.length === 0) box.innerHTML += '<div class="empty">No children linked to this account yet.</div>';
+}
+
+async function renderFamilyChat() {
+  const top = document.getElementById('famChatTop');
+  const body = document.getElementById('famChatBody');
+  if (!activeFamilyChildId) { top.innerHTML = '<span class="note">Select a child</span>'; body.innerHTML = ''; return; }
+  const child = ME.profile.students.find((s) => s.studentId === activeFamilyChildId);
+  top.innerHTML = `<div class="who"><b>${escapeHtml(child.name)}</b><span class="idbadge"><svg class="icon"><use href="#i-tag"/></svg> ${escapeHtml(child.name)} · ${escapeHtml(child.class)}</span></div>`;
+  const { messages } = await api('/api/family/messages');
+  const thread = messages.filter((m) => m.studentId === activeFamilyChildId);
+  body.innerHTML = '';
+  thread.forEach((m) => {
+    const el = document.createElement('div');
+    el.className = 'bubble ' + (m.direction === 'in' ? 'out' : 'in');
+    el.innerHTML = `${escapeHtml(m.body)}<div class="meta">${m.direction === 'in' ? 'You' : m.from} · ${new Date(m.time).toLocaleString()}</div>`;
+    body.appendChild(el);
+  });
+  if (thread.length === 0) body.innerHTML = '<div class="empty">No messages yet — say hello to the school below.</div>';
+  body.scrollTop = body.scrollHeight;
+}
+
+async function sendFamilyMessage() {
+  const input = document.getElementById('famChatInput');
+  const val = input.value.trim();
+  if (!val || !activeFamilyChildId) return;
+  await api('/api/family/messages', { method: 'POST', body: JSON.stringify({ studentId: activeFamilyChildId, body: val }) });
+  input.value = '';
+  await renderFamilyChat();
+}
+
+/* ---------------- staff: materials ---------------- */
+function hideMatError() { document.getElementById('matError').classList.remove('show'); }
+function showMatError(msg) { const el = document.getElementById('matError'); el.textContent = msg; el.classList.add('show'); }
+
+async function loadMaterialsStaff() {
+  const { materials } = await api('/api/materials');
+  const box = document.getElementById('materialsList');
+  box.innerHTML = materials.length
+    ? `<div class="card panel">${materials.map((m) => materialCardHtml(m, true)).join('')}</div>`
+    : '<div class="card panel"><div class="empty">Nothing uploaded yet.</div></div>';
+}
+
+async function uploadMaterial() {
+  hideMatError();
+  const title = document.getElementById('matTitle').value.trim();
+  const cls = document.getElementById('matClass').value.trim();
+  const tag = document.getElementById('matTag').value;
+  const description = document.getElementById('matDesc').value.trim();
+  const fileInput = document.getElementById('matFile');
+  const file = fileInput.files[0];
+  if (!title || !cls || !file) return showMatError('Fill in a title, class, and choose a file.');
+
+  const form = new FormData();
+  form.append('title', title);
+  form.append('class', cls);
+  form.append('tag', tag);
+  form.append('description', description);
+  form.append('file', file);
+
+  try {
+    const res = await fetch(API_BASE + '/api/staff/materials', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + TOKEN },
+      body: form,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Upload failed.');
+    document.getElementById('matTitle').value = '';
+    document.getElementById('matClass').value = '';
+    document.getElementById('matDesc').value = '';
+    fileInput.value = '';
+    await loadMaterialsStaff();
+  } catch (e) {
+    showMatError(e.message);
+  }
+}
+
+async function deleteMaterial(id) {
+  await api('/api/staff/materials/' + id, { method: 'DELETE' });
+  await loadMaterialsStaff();
+}
+
+/* ---------------- staff: calendar ---------------- */
+function hideEvError() { document.getElementById('evError').classList.remove('show'); }
+function showEvError(msg) { const el = document.getElementById('evError'); el.textContent = msg; el.classList.add('show'); }
+
+async function loadCalendarStaff() {
+  const isPrincipal = ME.type === 'staff' && ME.profile.role === 'principal';
+  document.getElementById('calendarFormCard').style.display = isPrincipal ? 'block' : 'none';
+  document.getElementById('calendarNote').textContent = isPrincipal
+    ? "Post an event for the whole school or one class — everyone who can see it gets it automatically."
+    : 'Only the principal can post events. You can see everything posted below.';
+  const { events } = await api('/api/calendar');
+  const box = document.getElementById('calendarList');
+  box.innerHTML = events.length
+    ? events.map((e) => eventCardHtml(e, isPrincipal)).join('')
+    : '<div class="card panel"><div class="empty">No events posted yet.</div></div>';
+}
+
+async function createEvent() {
+  hideEvError();
+  const title = document.getElementById('evTitle').value.trim();
+  const date = document.getElementById('evDate').value;
+  const time = document.getElementById('evTime').value;
+  const audience = document.getElementById('evAudience').value.trim() || 'all';
+  const description = document.getElementById('evDesc').value.trim();
+  if (!title || !date) return showEvError('Give the event a title and a date.');
+  try {
+    await api('/api/staff/calendar', { method: 'POST', body: JSON.stringify({ title, date, time, audience, description }) });
+    document.getElementById('evTitle').value = '';
+    document.getElementById('evDate').value = '';
+    document.getElementById('evTime').value = '';
+    document.getElementById('evAudience').value = '';
+    document.getElementById('evDesc').value = '';
+    await loadCalendarStaff();
+  } catch (e) {
+    showEvError(e.message);
+  }
+}
+
+async function deleteEvent(id) {
+  await api('/api/staff/calendar/' + id, { method: 'DELETE' });
+  await loadCalendarStaff();
+}
+
+/* ---------------- staff: admin ---------------- */
+let directoryData = [];
+
+function gradeNum(cls) { const m = String(cls || '').match(/(\d{1,2})/); return m ? parseInt(m[1], 10) : null; }
+function sectionLetter(cls) { const m = String(cls || '').match(/([A-Za-z]+)\s*$/); return m ? m[1].toUpperCase() : ''; }
+
+function studentRowHtml(s, isPrincipal) {
+  const avatar = s.photoUrl
+    ? `<img src="${API_BASE}${s.photoUrl}?token=${encodeURIComponent(TOKEN)}" alt="" style="width:32px;height:32px;border-radius:9px;object-fit:cover;display:block;">`
+    : `<div class="avatar" style="width:32px;height:32px;font-size:11px;background:linear-gradient(135deg,#7F77DD,#B08BFF);">${initials(s.name)}</div>`;
+  return `
+    <tr>
+      <td>${avatar}</td>
+      <td><b>${escapeHtml(s.name)}</b><div class="mat-meta" style="font-size:11px; color:var(--text-dimmer);">${escapeHtml(s.studentId || '')}</div></td>
+      <td>${escapeHtml(s.class)}</td>
+      <td style="text-transform:capitalize;">${escapeHtml(s.gender || '—')}</td>
+      <td class="flame-row">${'<svg class="icon"><use href="#i-flame"/></svg>'.repeat(Math.min(s.streak, 5))} <span>${s.streak}d</span></td>
+      <td>${s.points}</td>
+      ${isPrincipal ? `<td><button class="icon-btn danger" onclick="deleteStudentAdmin('${escapeHtml(s.studentId || '')}','${escapeHtml(s.name)}')" title="Remove student"><svg class="icon"><use href="#i-x"/></svg></button></td>` : ''}
+    </tr>`;
+}
+
+function populateDirectoryFilters() {
+  const grades = [...new Set(directoryData.map((s) => gradeNum(s.class)).filter((g) => g))].sort((a, b) => a - b);
+  const gradeSel = document.getElementById('dirGrade');
+  const curGrade = gradeSel.value;
+  gradeSel.innerHTML = '<option value="">All grades</option>' + grades.map((g) => `<option value="${g}">Grade ${g}</option>`).join('');
+  if (grades.includes(parseInt(curGrade, 10))) gradeSel.value = curGrade;
+
+  const sections = [...new Set(directoryData.map((s) => sectionLetter(s.class)).filter((s) => s))].sort();
+  const secSel = document.getElementById('dirSection');
+  const curSec = secSel.value;
+  secSel.innerHTML = '<option value="">All sections</option>' + sections.map((s) => `<option value="${s}">Section ${s}</option>`).join('');
+  if (sections.includes(curSec)) secSel.value = curSec;
+}
+
+function renderDirectory() {
+  const isPrincipal = ME.type === 'staff' && ME.profile.role === 'principal';
+  const search = document.getElementById('dirSearch').value.trim().toLowerCase();
+  const sort = document.getElementById('dirSort').value;
+  const gradeFilter = document.getElementById('dirGrade').value;
+  const sectionFilter = document.getElementById('dirSection').value;
+  const genderFilter = document.getElementById('dirGender').value;
+
+  let filtered = directoryData.filter((s) => {
+    const matchesSearch = !search || s.name.toLowerCase().includes(search) || (s.studentId || '').toLowerCase().includes(search);
+    const matchesGrade = !gradeFilter || gradeNum(s.class) === parseInt(gradeFilter, 10);
+    const matchesSection = !sectionFilter || sectionLetter(s.class) === sectionFilter;
+    const matchesGender = !genderFilter || s.gender === genderFilter;
+    return matchesSearch && matchesGrade && matchesSection && matchesGender;
+  });
+  filtered.sort((a, b) => sort === 'za' ? b.name.localeCompare(a.name) : a.name.localeCompare(b.name));
+
+  document.getElementById('adminTable').innerHTML = filtered.length
+    ? filtered.map((s) => studentRowHtml(s, isPrincipal)).join('')
+    : `<tr><td colspan="7" class="empty">No students match those filters.</td></tr>`;
+}
+
+async function loadAdmin() {
+  const isPrincipal = ME.type === 'staff' && ME.profile.role === 'principal';
+  document.getElementById('staffRegCard').style.display = isPrincipal ? 'block' : 'none';
+  document.getElementById('stuActionsHead').style.display = isPrincipal ? 'table-cell' : 'none';
+  document.getElementById('staffActionsHead').style.display = isPrincipal ? 'table-cell' : 'none';
+
+  const stats = await api('/api/admin/stats');
+  document.getElementById('statGrid').innerHTML = `
+    <div class="card stat"><div class="ic"><svg class="icon"><use href="#i-school"/></svg></div><div class="val">${stats.totalStudents}</div><div class="lbl">Active students</div></div>
+    <div class="card stat"><div class="ic"><svg class="icon"><use href="#i-flame"/></svg></div><div class="val">${stats.avgStreak}</div><div class="lbl">Avg weekly streak (days)</div></div>
+    <div class="card stat"><div class="ic"><svg class="icon"><use href="#i-messages"/></svg></div><div class="val">${stats.messagesThisWeek}</div><div class="lbl">Family messages this week</div></div>
+    <div class="card stat"><div class="ic"><svg class="icon"><use href="#i-trend"/></svg></div><div class="val">${stats.topClass}</div><div class="lbl">Top-streak class</div></div>`;
+
+  directoryData = stats.students;
+  populateDirectoryFilters();
+  renderDirectory();
+
+  const { staff } = await api('/api/staff/staff');
+  document.getElementById('staffTable').innerHTML = staff.map((s) => `
+    <tr>
+      <td><b>${escapeHtml(s.name)}</b></td>
+      <td>${escapeHtml(s.staffId)}</td>
+      <td style="text-transform:capitalize;">${escapeHtml(s.role)}</td>
+      ${isPrincipal ? `<td>${s.staffId === ME.profile.staffId ? '' : `<button class="icon-btn danger" onclick="deleteStaffAdmin('${escapeHtml(s.staffId)}','${escapeHtml(s.name)}')" title="Remove staff"><svg class="icon"><use href="#i-x"/></svg></button>`}</td>` : ''}
+    </tr>`).join('');
+
+  const { families } = await api('/api/staff/families');
+  document.getElementById('familyTable').innerHTML = families.length
+    ? families.map((f) => `
+        <tr>
+          <td><b>${escapeHtml(f.name)}</b></td>
+          <td>${escapeHtml(f.familyId)}</td>
+          <td>${f.studentNames.map(escapeHtml).join(', ')}</td>
+        </tr>`).join('')
+    : `<tr><td colspan="3" class="empty">No families linked yet.</td></tr>`;
+}
+
+function hideRegError() { document.getElementById('regError').classList.remove('show'); }
+function showRegError(msg) { const el = document.getElementById('regError'); el.textContent = msg; el.classList.add('show'); }
+function hideFamRegError() { document.getElementById('famRegError').classList.remove('show'); }
+function showFamRegError(msg) { const el = document.getElementById('famRegError'); el.textContent = msg; el.classList.add('show'); }
+function hideStaffRegError() { document.getElementById('staffRegError').classList.remove('show'); }
+function showStaffRegError(msg) { const el = document.getElementById('staffRegError'); el.textContent = msg; el.classList.add('show'); }
+
+async function registerStudent() {
+  hideRegError();
+  const studentId = document.getElementById('regId').value.trim();
+  const name = document.getElementById('regName').value.trim();
+  const cls = document.getElementById('regClass').value.trim();
+  const gender = document.getElementById('regGender').value;
+  const photoInput = document.getElementById('regPhoto');
+  const photo = photoInput.files[0];
+  if (!studentId || !name || !cls || !gender) return showRegError('Fill in student ID, name, class, and gender.');
+
+  const form = new FormData();
+  form.append('studentId', studentId);
+  form.append('name', name);
+  form.append('class', cls);
+  form.append('gender', gender);
+  if (photo) form.append('photo', photo);
+
+  try {
+    const res = await fetch(API_BASE + '/api/staff/register-student', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + TOKEN },
+      body: form,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Registration failed.');
+    document.getElementById('regId').value = '';
+    document.getElementById('regName').value = '';
+    document.getElementById('regClass').value = '';
+    photoInput.value = '';
+    await loadAdmin();
+  } catch (e) {
+    showRegError(e.message);
+  }
+}
+
+async function registerFamily() {
+  hideFamRegError();
+  const familyId = document.getElementById('famRegId').value.trim();
+  const name = document.getElementById('famRegName').value.trim();
+  const password = document.getElementById('famRegPw').value;
+  const studentId = document.getElementById('famRegStudentId').value.trim();
+  if (!familyId || !name || !password || !studentId) return showFamRegError('Fill in every field.');
+  try {
+    await api('/api/staff/register-family', { method: 'POST', body: JSON.stringify({ familyId, name, password, studentId }) });
+    document.getElementById('famRegId').value = '';
+    document.getElementById('famRegName').value = '';
+    document.getElementById('famRegPw').value = '';
+    document.getElementById('famRegStudentId').value = '';
+    await loadAdmin();
+  } catch (e) {
+    showFamRegError(e.message);
+  }
+}
+
+async function registerStaff() {
+  hideStaffRegError();
+  const staffId = document.getElementById('staffRegId').value.trim();
+  const name = document.getElementById('staffRegName').value.trim();
+  const password = document.getElementById('staffRegPw').value;
+  const role = document.getElementById('staffRegRole').value;
+  if (!staffId || !name || !password) return showStaffRegError('Fill in staff ID, name, and password.');
+  try {
+    await api('/api/staff/register-staff', { method: 'POST', body: JSON.stringify({ staffId, name, password, role }) });
+    document.getElementById('staffRegId').value = '';
+    document.getElementById('staffRegName').value = '';
+    document.getElementById('staffRegPw').value = '';
+    document.getElementById('staffRegRole').value = 'teacher';
+    await loadAdmin();
+  } catch (e) {
+    showStaffRegError(e.message);
+  }
+}
+
+async function deleteStudentAdmin(studentId, name) {
+  if (!confirm(`Remove ${name} (${studentId})? This also deletes their to-dos, streak history, and messages. This can't be undone.`)) return;
+  try {
+    await api('/api/staff/students/' + encodeURIComponent(studentId), { method: 'DELETE' });
+    await loadAdmin();
+  } catch (e) {
+    alert(e.message);
+  }
+}
+
+async function deleteStaffAdmin(staffId, name) {
+  if (!confirm(`Remove ${name} (${staffId}) from staff? This can't be undone.`)) return;
+  try {
+    await api('/api/staff/staff/' + encodeURIComponent(staffId), { method: 'DELETE' });
+    await loadAdmin();
+  } catch (e) {
+    alert(e.message);
+  }
+}
+
+/* ---------------- init ---------------- */
+if (TOKEN) bootApp();
+</script>
+</body>
+</html>
