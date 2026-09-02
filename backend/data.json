@@ -1,0 +1,124 @@
+{
+  "staff": [
+    {
+      "id": "st_1",
+      "staffId": "P-1001",
+      "name": "Principal Almaz Bekele",
+      "role": "principal",
+      "passwordHash": "684db756a540da36fd2c277bc7fba625:54108ab0882890d8e16afda49de19cb03bcef21b4346349114c1958c3252edaaacd79105087e21b2bfb663cefed55d71f8d4b66effeb1d99347a63a0d922f6f8",
+      "createdAt": "2026-08-24T07:37:36.552Z"
+    },
+    {
+      "id": "st_2",
+      "staffId": "T-2001",
+      "name": "Mrs. Kebede",
+      "role": "teacher",
+      "passwordHash": "24fac5f00330a8409578d49825797e53:ff972e83f449d03aa4fa9abbc4648af385549e61f611e29b585db60c4d01589616ddad3991ee0d50ce4128e7212e5ce4fc0faea07ba54111d3839945c95ef85e",
+      "createdAt": "2026-08-24T07:37:36.552Z"
+    }
+  ],
+  "students": [
+    {
+      "id": "stu_1",
+      "studentId": "S-3001",
+      "name": "Selam Tesfaye",
+      "class": "9B",
+      "points": 388,
+      "registeredBy": "P-1001",
+      "createdAt": "2026-08-24T07:37:36.552Z"
+    },
+    {
+      "id": "stu_2",
+      "studentId": "S-3002",
+      "name": "Nardos Haile",
+      "class": "9B",
+      "points": 412,
+      "registeredBy": "P-1001",
+      "createdAt": "2026-08-24T07:37:36.552Z"
+    },
+    {
+      "id": "stu_3",
+      "studentId": "S-3003",
+      "name": "Dawit Alemu",
+      "class": "7A",
+      "points": 301,
+      "registeredBy": "T-2001",
+      "createdAt": "2026-08-24T07:37:36.552Z"
+    }
+  ],
+  "families": [
+    {
+      "id": "fam_1",
+      "familyId": "F-5001",
+      "name": "Tesfaye Family",
+      "studentIds": [
+        "S-3001"
+      ],
+      "passwordHash": "af366d7692c21b51d610b7919bf674f2:31c710662140f554389f2081fc4fd28356260bc51ed19c9394f3bcce9e129d1aa0b5737254c3637741e0eeba8f4addba7fd9dcd9f3516ded5286e928776476d4",
+      "linkedBy": "P-1001",
+      "createdAt": "2026-08-24T07:37:36.552Z"
+    }
+  ],
+  "todos": [
+    {
+      "id": "td_1",
+      "studentId": "S-3001",
+      "text": "Review chapter 4 — algebra",
+      "tag": "math",
+      "done": true,
+      "createdAt": "2026-08-24T07:37:36.552Z"
+    },
+    {
+      "id": "td_2",
+      "studentId": "S-3001",
+      "text": "Finish biology worksheet",
+      "tag": "sci",
+      "done": false,
+      "createdAt": "2026-08-24T07:37:36.552Z"
+    }
+  ],
+  "streaks": {
+    "S-3001": [
+      "2026-08-19",
+      "2026-08-20",
+      "2026-08-21",
+      "2026-08-22",
+      "2026-08-23",
+      "2026-08-24"
+    ]
+  },
+  "messages": [
+    {
+      "id": "msg_1",
+      "studentId": "S-3001",
+      "from": "Mrs. Tesfaye (parent)",
+      "to": "Homeroom teacher",
+      "body": "Good afternoon, Selam mentioned a math test next week — could you confirm the date?",
+      "direction": "in",
+      "time": "2026-08-24T07:37:36.552Z"
+    },
+    {
+      "id": "msg_47093364",
+      "studentId": "S-3001",
+      "from": "Principal Almaz Bekele",
+      "to": "Family",
+      "body": "hi selam",
+      "direction": "out",
+      "time": "2026-08-24T07:39:19.573Z"
+    }
+  ],
+  "materials": [],
+  "calendarEvents": [
+    {
+      "id": "ev_1",
+      "title": "First term math exam",
+      "date": "2026-08-31",
+      "time": "09:00",
+      "description": "Algebra and geometry, chapters 1–4.",
+      "audience": "9B",
+      "createdBy": "P-1001",
+      "createdByName": "Principal Almaz Bekele",
+      "createdAt": "2026-08-24T07:37:36.552Z"
+    }
+  ]
+}
