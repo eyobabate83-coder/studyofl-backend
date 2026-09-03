@@ -236,8 +236,10 @@
   .section-title h2{ font-size:16px; margin:0; }
   .section-title .note{ font-size:12px; color:var(--text-dimmer); }
 
-  .reg-form{ display:grid; grid-template-columns:1fr 1fr 1fr auto; gap:10px; align-items:end; }
-  @media (max-width:760px){ .reg-form{ grid-template-columns:1fr !important; } }
+  .reg-form{ display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)) !important; gap:10px; align-items:end; }
+  .reg-form .btn{ width:100%; min-width:130px; white-space:nowrap; }
+  @media (max-width:760px){ .reg-form{ grid-template-columns:repeat(2,minmax(0,1fr)) !important; } .reg-form .btn{ grid-column:1 / -1; } }
+  @media (max-width:460px){ .reg-form{ grid-template-columns:1fr !important; } }
 
   .mat-card{ display:flex; align-items:center; gap:14px; padding:14px 16px; border-radius:14px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); margin-bottom:10px; transition:.2s; }
   .mat-card:hover{ background:rgba(255,255,255,.08); }
@@ -294,6 +296,9 @@
   .modal-backdrop{ display:none; position:fixed; inset:0; z-index:60; align-items:center; justify-content:center; padding:20px; background:rgba(10,4,25,.72); backdrop-filter:blur(8px); }
   .modal-backdrop.open{ display:flex; animation:fadeUp .2s ease; }
   .profile-card,.onboarding-card{ width:560px; max-width:100%; padding:24px; }
+  .student-id-card{ width:100%; margin:0 0 20px; }
+  .student-id-card .id-card-main{ align-items:flex-start; }
+  .student-id-card .id-card-foot{ justify-content:flex-end; }
   .modal-close{ position:absolute; top:16px; right:16px; }
   .id-card-head{ display:flex; justify-content:space-between; color:var(--flame-1); font-size:11px; letter-spacing:.8px; text-transform:uppercase; font-weight:700; margin-bottom:22px; }
   .id-card-main{ display:flex; gap:18px; align-items:center; }
@@ -563,11 +568,11 @@
   <!-- ================= STUDENT VIEW ================= -->
   <div class="view" id="view-student">
     <nav class="section-nav" aria-label="Student sections">
-      <button class="role-btn active" onclick="showStudentSection('student-overview', this)"><svg class="icon"><use href="#i-flame"/></svg>Overview</button>
-      <button class="role-btn" onclick="showStudentSection('student-materials', this)"><svg class="icon"><use href="#i-doc"/></svg>Study materials</button>
-      <button class="role-btn" onclick="showStudentSection('student-library', this)"><svg class="icon"><use href="#i-book"/></svg>Digital library</button>
-      <button class="role-btn" onclick="showStudentSection('student-quizzes', this)"><svg class="icon"><use href="#i-trophy"/></svg>Quizzes &amp; tests</button>
-      <button class="role-btn" onclick="showStudentSection('student-profile', this)"><svg class="icon"><use href="#i-id"/></svg>Profile</button>
+      <a class="role-btn active" href="index.html"><svg class="icon"><use href="#i-flame"/></svg>Overview</a>
+      <a class="role-btn" href="student-upload.html"><svg class="icon"><use href="#i-doc"/></svg>Study materials</a>
+      <a class="role-btn" href="student-library.html"><svg class="icon"><use href="#i-book"/></svg>Digital library</a>
+      <a class="role-btn" href="student-quizzes.html"><svg class="icon"><use href="#i-trophy"/></svg>Quizzes &amp; tests</a>
+      <a class="role-btn" href="student-profile.html"><svg class="icon"><use href="#i-id"/></svg>Profile</a>
     </nav>
     <div id="student-overview" class="student-section">
     <div class="card hero">
@@ -583,6 +588,15 @@
         </div>
       </div>
     </div>
+
+    <section class="profile-card student-id-card card" aria-labelledby="studentIdCardTitle">
+      <div class="id-card-head"><span>Studyo digital identity card</span><span>Student</span></div>
+      <div class="id-card-main">
+        <div id="studentIdPhoto" class="profile-photo"></div>
+        <div><h2 id="studentIdCardTitle">Student profile</h2><div id="studentIdDetails" class="profile-details"></div></div>
+      </div>
+      <div class="id-card-foot"><img id="studentIdQr" alt="QR code containing the student profile snapshot"><div><div class="note">Snapshot generated</div><div id="studentIdSnapshot" class="profile-snapshot"></div></div></div>
+    </section>
 
     <div class="grid2">
       <div class="card panel">
@@ -602,40 +616,6 @@
     </div>
     </div>
 
-    <div id="student-materials" class="grid2 student-section" style="margin-top:20px;">
-      <div class="card panel">
-        <h2><svg class="icon"><use href="#i-doc"/></svg> Study materials for your class</h2>
-        <div id="studentMaterialsList"></div>
-      </div>
-      <div class="card panel">
-        <h2><svg class="icon"><use href="#i-calendar"/></svg> Upcoming events</h2>
-        <div id="studentEventsList"></div>
-      </div>
-    </div>
-
-    <div id="student-library" class="student-section">
-    <div class="section-title" style="margin-top:20px;">
-      <h2 style="font-size:20px;"><svg class="icon" style="vertical-align:-3px; margin-right:6px;"><use href="#i-book"/></svg>Digital library</h2>
-      <span class="note" id="libGradeNote"></span>
-    </div>
-    <div class="card panel">
-      <div class="lib-toolbar">
-        <div class="search-wrap">
-          <svg class="icon"><use href="#i-search"/></svg>
-          <input type="text" id="libSearchStudent" placeholder="Search by title or subject..." oninput="renderStudentLibrary()"/>
-        </div>
-        <select id="libSubjectStudent" onchange="renderStudentLibrary()"><option value="">All subjects</option></select>
-      </div>
-      <div class="lib-grid" id="libGridStudent"></div>
-    </div>
-    </div>
-
-    <div id="student-quizzes" class="student-section" style="margin-top:20px;">
-      <div class="card panel"><h2><svg class="icon"><use href="#i-trophy"/></svg> Quizzes &amp; tests</h2><div class="empty">No quizzes or tests are scheduled yet.</div></div>
-    </div>
-    <div id="student-profile" class="student-section" style="margin-top:20px;">
-      <div class="card panel"><h2><svg class="icon"><use href="#i-id"/></svg> Student profile</h2><div class="profile-summary"><b id="studentProfileName">—</b><span id="studentProfileId">—</span><span id="studentProfileClass">—</span></div></div>
-    </div>
   </div>
 
   <!-- ================= FAMILY VIEW ================= -->
@@ -1069,10 +1049,6 @@ function showView(name) {
   document.querySelectorAll('.view').forEach((v) => v.classList.remove('active'));
   document.getElementById('view-' + name).classList.add('active');
 }
-function showStudentSection(id, button) {
-  document.getElementById(id).scrollIntoView({ behavior: 'smooth', block: 'start' });
-  document.querySelectorAll('.section-nav .role-btn').forEach((item) => item.classList.toggle('active', item === button));
-}
 function switchStaffView(name) {
   showView(name);
   document.querySelectorAll('#staffRoles .role-btn').forEach((b) => b.classList.toggle('active', b.dataset.view === name));
@@ -1134,10 +1110,34 @@ const weekLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
 async function loadStudentDashboard() {
   document.getElementById('studentGreeting').textContent = 'Hey ' + ME.profile.name.split(' ')[0];
-  document.getElementById('studentProfileName').textContent = ME.profile.name;
-  document.getElementById('studentProfileId').textContent = 'Student ID: ' + ME.profile.studentId;
-  document.getElementById('studentProfileClass').textContent = 'Class: ' + ME.profile.class;
-  await Promise.all([renderTodos(), renderWeekAndStreak(), renderLeaderboard(), renderStudentMaterials(), renderStudentEvents(), loadStudentLibrary()]);
+  renderStudentIdCard();
+  await Promise.all([renderTodos(), renderWeekAndStreak(), renderLeaderboard()]);
+}
+
+function renderStudentIdCard() {
+  const profile = ME.profile;
+  const snapshot = {
+    type: 'student',
+    studentId: profile.studentId,
+    name: profile.name,
+    class: profile.class,
+    gender: profile.gender || null,
+    points: profile.points || 0,
+    generatedAt: new Date().toISOString(),
+  };
+  const photoUrl = profile.photoUrl ? API_BASE + profile.photoUrl + '?token=' + encodeURIComponent(TOKEN) : '';
+  document.getElementById('studentIdCardTitle').textContent = profile.name;
+  document.getElementById('studentIdDetails').innerHTML = [
+    ['Student ID', profile.studentId],
+    ['Class / grade', profile.class],
+    ['Gender', profile.gender || 'Not provided'],
+    ['Points', profile.points || 0],
+  ].map(([label, value]) => `<span><b>${escapeHtml(label)}:</b> ${escapeHtml(String(value))}</span>`).join('');
+  document.getElementById('studentIdPhoto').innerHTML = photoUrl
+    ? `<img src="${photoUrl}" alt="${escapeHtml(profile.name)}">`
+    : escapeHtml(initials(profile.name));
+  document.getElementById('studentIdSnapshot').textContent = snapshot.generatedAt;
+  document.getElementById('studentIdQr').src = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(JSON.stringify(snapshot));
 }
 
 async function renderTodos() {

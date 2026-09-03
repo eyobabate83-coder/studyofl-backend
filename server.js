@@ -382,7 +382,67 @@ async function handleStaffLogin(req, res) {
     return send(res, 401, { error: "That staff ID or password doesn't match our records." });
   }
   const token = signToken({ type: 'staff', id: staff.staffId, role: staff.role, name: staff.name });
-  send(res, 200, { token, profile: { staffId: staff.staffId, name: staff.name, role: staff.role } });
+  send(res, 200, { token, profile: { staffId: staff.staffId, name: staff.name, role: staff.role, photoUrl: staff.photoUrl, needsPhoto: staff.role === 'teacher' && !staff.photoUrl } });
+}
+
+async function handleRegisterStaff(req, res) {
+  const auth = requireStaff(req, res);
+  if (!auth) return;
+  if (auth.role !== 'principal') return send(res, 403, { error: 'Only the principal can register staff.' });
+  const contentType = req.headers['content-type'] || '';
+  const boundaryMatch = contentType.match(/boundary=(.+)$/);
+  if (!boundaryMatch) return send(res, 400, { error: 'Expected a staff registration form.' });
+  let raw;
+  try { raw = await readRawBody(req, MAX_UPLOAD_BYTES); }
+  catch (e) { return send(res, 413, { error: e.message || 'File is too large.' }); }
+  const { fields, files } = parseMultipart(raw, boundaryMatch[1]);
+  const staffId = (fields.staffId || '').trim();
+  const name = (fields.name || '').trim();
+  const password = fields.password || '';
+  const role = (fields.role || 'teacher').trim();
+  const photo = files.photo;
+  if (!staffId || !name || !password) return send(res, 400, { error: 'Provide a staff ID, name, and password.' });
+  if (!['teacher', 'director', 'principal'].includes(role)) return send(res, 400, { error: 'Choose a valid staff role.' });
+  if (db.staff.some((entry) => entry.staffId.toLowerCase() === staffId.toLowerCase())) return send(res, 409, { error: 'A staff member with that ID already exists.' });
+  if (photo && photo.data.length && !['image/jpeg', 'image/png'].includes(photo.contentType.toLowerCase())) {
+    return send(res, 400, { error: 'Profile pictures must be JPEG or PNG files.' });
+  }
+  let photoUrl;
+  if (photo && photo.data.length) {
+    const extension = photo.contentType.toLowerCase() === 'image/png' ? '.png' : '.jpg';
+    const storedName = 'staff_' + crypto.randomBytes(10).toString('hex') + extension;
+    fs.writeFileSync(path.join(UPLOADS_DIR, storedName), photo.data);
+    photoUrl = `/api/staff-photos/${storedName}`;
+  }
+  const staff = { id: 'st_' + crypto.randomBytes(4).toString('hex'), staffId, name, role, passwordHash: hashPassword(password), ...(photoUrl ? { photoUrl } : {}), createdAt: new Date().toISOString() };
+  db.staff.push(staff);
+  saveDB(db);
+  const { passwordHash, ...profile } = staff;
+  send(res, 201, { staff: profile });
+}
+
+async function handleUpdateStaffPhoto(req, res) {
+  const auth = requireStaff(req, res);
+  if (!auth) return;
+  const contentType = req.headers['content-type'] || '';
+  const boundaryMatch = contentType.match(/boundary=(.+)$/);
+  if (!boundaryMatch) return send(res, 400, { error: 'Expected a profile picture form.' });
+  let raw;
+  try { raw = await readRawBody(req, MAX_UPLOAD_BYTES); }
+  catch (e) { return send(res, 413, { error: e.message || 'File is too large.' }); }
+  const { files } = parseMultipart(raw, boundaryMatch[1]);
+  const photo = files.photo;
+  if (!photo || !photo.data.length) return send(res, 400, { error: 'Choose a profile picture.' });
+  if (!['image/jpeg', 'image/png'].includes(photo.contentType.toLowerCase())) return send(res, 400, { error: 'Profile pictures must be JPEG or PNG files.' });
+  const staff = db.staff.find((entry) => entry.staffId === auth.id);
+  if (!staff) return send(res, 404, { error: 'Staff account not found.' });
+  const extension = photo.contentType.toLowerCase() === 'image/png' ? '.png' : '.jpg';
+  const storedName = 'staff_' + crypto.randomBytes(10).toString('hex') + extension;
+  fs.writeFileSync(path.join(UPLOADS_DIR, storedName), photo.data);
+  if (staff.photoUrl) try { fs.unlinkSync(path.join(UPLOADS_DIR, path.basename(staff.photoUrl))); } catch {}
+  staff.photoUrl = `/api/staff-photos/${storedName}`;
+  saveDB(db);
+  send(res, 200, { photoUrl: staff.photoUrl });
 }
 
 async function handleStudentLogin(req, res) {
@@ -582,6 +642,18 @@ function handleListStaff(req, res) {
   send(res, 200, { staff });
 }
 
+function handleServeStaffPhoto(req, res, storedName) {
+  const auth = requireStaff(req, res);
+  if (!auth) return;
+  const staff = db.staff.find((entry) => entry.photoUrl === `/api/staff-photos/${storedName}`);
+  if (!staff) return send(res, 404, { error: 'Photo not found.' });
+  const filePath = path.join(UPLOADS_DIR, storedName);
+  if (!fs.existsSync(filePath)) return send(res, 404, { error: 'Photo is missing on the server.' });
+  const data = fs.readFileSync(filePath);
+  res.writeHead(200, { 'Content-Type': path.extname(storedName).toLowerCase() === '.png' ? 'image/png' : 'image/jpeg', 'Content-Length': data.length, 'Content-Disposition': 'inline', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'private, max-age=3600' });
+  res.end(data);
+}
+
 function handleMe(req, res) {
   const auth = getAuth(req);
   if (!auth) return send(res, 401, { error: 'Not logged in.' });
@@ -595,7 +667,7 @@ function handleMe(req, res) {
     return send(res, 200, { type: 'family', profile: { familyId: auth.id, name: auth.name, students } });
   }
   const staff = db.staff.find((s) => s.staffId === auth.id);
-  send(res, 200, { type: 'staff', profile: { staffId: staff.staffId, name: staff.name, role: staff.role } });
+  send(res, 200, { type: 'staff', profile: { staffId: staff.staffId, name: staff.name, role: staff.role, photoUrl: staff.photoUrl, needsPhoto: staff.role === 'teacher' && !staff.photoUrl } });
 }
 
 function handleGetTodos(req, res) {
@@ -1120,6 +1192,8 @@ const server = http.createServer(async (req, res) => {
     if (m === 'POST' && p === '/api/auth/student/login') return await handleStudentLogin(req, res);
     if (m === 'POST' && p === '/api/auth/family/login') return await handleFamilyLogin(req, res);
     if (m === 'POST' && p === '/api/staff/register-student') return await handleRegisterStudent(req, res);
+    if (m === 'POST' && p === '/api/staff/register-staff') return await handleRegisterStaff(req, res);
+    if (m === 'POST' && p === '/api/staff/profile-photo') return await handleUpdateStaffPhoto(req, res);
     if (m === 'POST' && p === '/api/staff/register-family') return await handleRegisterFamily(req, res);
     if (m === 'GET' && p === '/api/staff/students') return handleListStudents(req, res);
     const studentDeleteMatch = p.match(/^\/api\/staff\/students\/([^/]+)$/);
@@ -1162,6 +1236,8 @@ const server = http.createServer(async (req, res) => {
     if (m === 'GET' && fileMatch) return handleServeFile(req, res, fileMatch[1]);
     const studentPhotoMatch = p.match(/^\/api\/student-photos\/([^/]+)$/);
     if (m === 'GET' && studentPhotoMatch) return handleServeStudentPhoto(req, res, studentPhotoMatch[1]);
+    const staffPhotoMatch = p.match(/^\/api\/staff-photos\/([^/]+)$/);
+    if (m === 'GET' && staffPhotoMatch) return handleServeStaffPhoto(req, res, staffPhotoMatch[1]);
 
     if (m === 'POST' && p === '/api/staff/calendar') return await handleCreateEvent(req, res);
     if (m === 'GET' && p === '/api/calendar') return handleListEvents(req, res);
