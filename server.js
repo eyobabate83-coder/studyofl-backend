@@ -736,8 +736,11 @@ function handleAdminStats(req, res) {
     messagesThisWeek,
     topClass,
     students: db.students.map((s) => ({
+      studentId: s.studentId,
       name: s.name,
       class: s.class,
+      gender: s.gender,
+      photoUrl: s.photoUrl,
       points: s.points,
       streak: (db.streaks[s.studentId] || []).length,
     })),
