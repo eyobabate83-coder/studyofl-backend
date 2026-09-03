@@ -165,6 +165,9 @@ function loadDB() {
   // so upgrading the server code never crashes on an older data.json.
   if (!loaded.materials) loaded.materials = [];
   if (!loaded.library) loaded.library = [];
+  loaded.library.forEach((item) => {
+    if (!Number.isInteger(item.downloadCount) || item.downloadCount < 0) item.downloadCount = 0;
+  });
   if (!loaded.calendarEvents) loaded.calendarEvents = [];
   if (!loaded.families) loaded.families = [];
   return loaded;
@@ -898,6 +901,7 @@ function handleListLibrary(req, res) {
     .map((item) => ({
       ...item,
       storedName: undefined,
+      downloadCount: Number(item.downloadCount || 0),
       viewUrl: `/api/library-files/${item.storedName}`,
       downloadUrl: `/api/library-files/${item.storedName}?download=1`,
     }));
@@ -930,7 +934,7 @@ async function handleUploadLibrary(req, res) {
   fs.writeFileSync(path.join(UPLOADS_DIR, storedName), file.data);
   const item = {
     id: 'lib_' + crypto.randomBytes(4).toString('hex'), title, subject, resourceType, gradeLevel,
-    fileName: file.filename, storedName, size: file.data.length, uploadedBy: auth.name,
+    fileName: file.filename, storedName, size: file.data.length, downloadCount: 0, uploadedBy: auth.name,
     createdAt: new Date().toISOString(),
   };
   db.library.push(item);
@@ -947,6 +951,8 @@ function handleServeLibraryFile(req, res, storedName) {
   if (auth.type === 'student' && item.gradeLevel !== grade) return send(res, 403, { error: "This resource isn't available for your grade." });
   const filePath = path.join(UPLOADS_DIR, storedName);
   if (!fs.existsSync(filePath)) return send(res, 404, { error: 'Resource is missing on the server.' });
+  item.downloadCount = (item.downloadCount || 0) + 1;
+  saveDB(db);
   const data = fs.readFileSync(filePath);
   const disposition = new URL(req.url, `http://${req.headers.host}`).searchParams.has('download') ? 'attachment' : 'inline';
   res.writeHead(200, { 'Content-Type': 'application/pdf', 'Content-Length': data.length, 'Content-Disposition': `${disposition}; filename="${item.fileName.replace(/"/g, '')}"`, 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'private, max-age=3600' });
