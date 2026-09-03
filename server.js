@@ -536,6 +536,30 @@ function handleListStudents(req, res) {
   send(res, 200, { students: db.students });
 }
 
+function handleDeleteStudent(req, res, studentId) {
+  const auth = requireStaff(req, res);
+  if (!auth) return;
+  if (auth.role !== 'principal') return send(res, 403, { error: 'Only the principal can remove students.' });
+
+  const student = db.students.find((s) => s.studentId === studentId);
+  if (!student) return send(res, 404, { error: 'Student not found.' });
+
+  db.students = db.students.filter((s) => s.studentId !== studentId);
+  db.todos = db.todos.filter((todo) => todo.studentId !== studentId);
+  db.messages = db.messages.filter((message) => message.studentId !== studentId);
+  delete db.streaks[studentId];
+  db.families.forEach((family) => {
+    family.studentIds = family.studentIds.filter((id) => id !== studentId);
+  });
+  saveDB(db);
+
+  if (student.photoUrl) {
+    const storedName = path.basename(student.photoUrl);
+    try { fs.unlinkSync(path.join(UPLOADS_DIR, storedName)); } catch {}
+  }
+  send(res, 200, { ok: true });
+}
+
 function handleListFamilies(req, res) {
   const auth = requireStaff(req, res);
   if (!auth) return;
@@ -1023,6 +1047,10 @@ const server = http.createServer(async (req, res) => {
     if (m === 'POST' && p === '/api/staff/register-student') return await handleRegisterStudent(req, res);
     if (m === 'POST' && p === '/api/staff/register-family') return await handleRegisterFamily(req, res);
     if (m === 'GET' && p === '/api/staff/students') return handleListStudents(req, res);
+    const studentDeleteMatch = p.match(/^\/api\/staff\/students\/([^/]+)$/);
+    if (m === 'DELETE' && studentDeleteMatch) {
+      return handleDeleteStudent(req, res, decodeURIComponent(studentDeleteMatch[1]));
+    }
     if (m === 'GET' && p === '/api/staff/families') return handleListFamilies(req, res);
     if (m === 'GET' && p === '/api/staff/staff') return handleListStaff(req, res);
     if (m === 'GET' && p === '/api/me') return handleMe(req, res);
