@@ -863,7 +863,7 @@ const API_BASE = 'https://studyofl-backend.onrender.com';
 let TOKEN = localStorage.getItem('studyo_token') || null;
 let ME = null; // { type: 'student'|'staff', profile: {...} }
 
-async function api(path, opts = {}) {
+async function api(path, opts = {}) { 
   const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
   if (TOKEN) headers['Authorization'] = 'Bearer ' + TOKEN;
   const res = await fetch(API_BASE + path, { ...opts, headers });
