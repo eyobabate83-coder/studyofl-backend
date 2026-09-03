@@ -237,9 +237,17 @@
   .section-title .note{ font-size:12px; color:var(--text-dimmer); }
 
   /* Registration and upload controls wrap instead of forcing the action off-screen. */
-  .reg-form{ display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; width:100%; }
-  .reg-form > .field{ flex:1 1 180px; min-width:150px; min-inline-size:0; }
-  .reg-form > .btn{ flex:1 1 180px; min-width:150px; margin-top:8px; white-space:nowrap; }
+  .reg-form, .upload-form, form.resource-form, .form-container{
+    display:flex !important; flex-wrap:wrap !important; gap:12px !important;
+    align-items:flex-end !important; width:100%; min-width:0;
+  }
+  .reg-form > div, .upload-form > div, form.resource-form > div, .form-container > div, .form-group{
+    flex:1 1 160px !important; min-width:140px !important; min-inline-size:0;
+  }
+  .reg-form button, .upload-form button, form.resource-form button, .form-container button, .btn-primary{
+    flex:1 1 160px !important; min-width:140px; flex-shrink:0 !important;
+    margin-top:4px !important; white-space:nowrap;
+  }
 
   .mat-card{ display:flex; align-items:center; gap:14px; padding:14px 16px; border-radius:14px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); margin-bottom:10px; transition:.2s; }
   .mat-card:hover{ background:rgba(255,255,255,.08); }
