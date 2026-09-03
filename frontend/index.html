@@ -288,6 +288,28 @@
   .book-badge.downloads{ background:rgba(45,212,191,.16); color:#7CEFDE; }
   .profile-summary{ display:flex; flex-wrap:wrap; gap:10px 18px; color:var(--text-dim); font-size:13px; }
   .profile-summary b{ color:var(--text); font-family:'Fredoka'; font-size:18px; width:100%; }
+  .directory-row{ cursor:pointer; }
+  .directory-row:hover{ background:rgba(255,255,255,.07); }
+  .directory-photo{ width:32px; height:32px; margin-right:8px; border-radius:9px; object-fit:cover; vertical-align:middle; }
+  .modal-backdrop{ display:none; position:fixed; inset:0; z-index:60; align-items:center; justify-content:center; padding:20px; background:rgba(10,4,25,.72); backdrop-filter:blur(8px); }
+  .modal-backdrop.open{ display:flex; animation:fadeUp .2s ease; }
+  .profile-card,.onboarding-card{ width:560px; max-width:100%; padding:24px; }
+  .modal-close{ position:absolute; top:16px; right:16px; }
+  .id-card-head{ display:flex; justify-content:space-between; color:var(--flame-1); font-size:11px; letter-spacing:.8px; text-transform:uppercase; font-weight:700; margin-bottom:22px; }
+  .id-card-main{ display:flex; gap:18px; align-items:center; }
+  .profile-photo{ width:104px; height:104px; flex-shrink:0; display:flex; align-items:center; justify-content:center; overflow:hidden; border-radius:22px; background:linear-gradient(135deg,#7F77DD,#B08BFF); color:#fff; font:600 30px 'Fredoka'; }
+  .profile-photo img{ width:100%; height:100%; object-fit:cover; }
+  .id-card-main h2{ margin:0 0 10px; font-size:25px; }
+  .profile-details{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px 18px; color:var(--text-dim); font-size:12px; }
+  .profile-details b{ color:var(--text); }
+  .id-card-foot{ display:flex; align-items:center; gap:16px; margin-top:24px; padding-top:18px; border-top:1px solid rgba(255,255,255,.14); }
+  .id-card-foot img{ width:92px; height:92px; padding:6px; border-radius:12px; background:#fff; }
+  .profile-snapshot{ color:var(--text); font-size:12px; margin-top:4px; }
+  .modal-actions{ display:flex; justify-content:flex-end; gap:9px; margin-top:22px; }
+  .onboarding-card{ max-width:420px; }
+  .onboarding-card h2{ margin-top:0; }
+  .onboarding-card input{ width:100%; margin:8px 0 16px; }
+  @media print{ body *{ visibility:hidden; } #profileModal.open,#profileModal.open *{ visibility:visible; } #profileModal.open{ position:static; display:block; background:none; } .profile-card{ box-shadow:none; } .modal-actions,.modal-close{ display:none; } }
   .book-actions{ display:flex; gap:8px; margin-top:auto; }
   .book-actions .btn{ flex:1; padding:9px 10px; font-size:12.5px; display:flex; align-items:center; justify-content:center; gap:6px; }
 
@@ -798,7 +820,7 @@
       <h2><svg class="icon"><use href="#i-school"/></svg> Register a new teacher / staff member</h2>
       <p class="note" style="margin:-8px 0 14px;">Only the principal can do this. New staff log in with the ID + password you set here.</p>
       <div class="error-box" id="staffRegError"></div>
-      <div class="reg-form" style="grid-template-columns:1fr 1fr 1fr .8fr auto;">
+      <div class="reg-form" style="grid-template-columns:1fr 1fr 1fr .8fr 1fr auto;">
         <div class="field"><label>Staff ID</label><input type="text" id="staffRegId" placeholder="e.g. T-2003"/></div>
         <div class="field"><label>Full name</label><input type="text" id="staffRegName" placeholder="e.g. Mr. Girma"/></div>
         <div class="field"><label>Password</label><input type="password" id="staffRegPw" placeholder="Set a password"/></div>
@@ -810,6 +832,7 @@
             <option value="principal">Principal</option>
           </select>
         </div>
+        <div class="field"><label>Profile picture (optional)</label><input type="file" id="staffRegPhoto" accept="image/jpeg,image/png"/></div>
         <button class="btn" onclick="registerStaff()"><svg class="icon" style="margin-right:6px;"><use href="#i-plus"/></svg>Register</button>
       </div>
     </div>
@@ -875,6 +898,29 @@
   <div class="ai-foot">
     <input type="text" id="aiInput" placeholder="Ask your study buddy..." onkeydown="if(event.key==='Enter')sendAI()"/>
     <button class="btn" onclick="sendAI()"><svg class="icon"><use href="#i-send"/></svg></button>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="profileModal" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle">
+  <div class="profile-card card">
+    <button class="icon-btn modal-close" onclick="closeProfileModal()" title="Close"><svg class="icon"><use href="#i-x"/></svg></button>
+    <div class="id-card-head"><span>Studyo identity card</span><span id="profileModalKind"></span></div>
+    <div class="id-card-main">
+      <div id="profileModalPhoto" class="profile-photo"></div>
+      <div><h2 id="profileModalTitle">Profile</h2><div id="profileModalDetails" class="profile-details"></div></div>
+    </div>
+    <div class="id-card-foot"><img id="profileModalQr" alt="Profile QR code"/><div><div class="note">Snapshot generated</div><div id="profileModalSnapshot" class="profile-snapshot"></div></div></div>
+    <div class="modal-actions"><button class="btn ghost" onclick="shareProfileCard()">Share to family</button><button class="btn" onclick="window.print()">Download / print</button></div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="teacherOnboarding" role="dialog" aria-modal="true" aria-labelledby="teacherOnboardingTitle">
+  <div class="card onboarding-card">
+    <h2 id="teacherOnboardingTitle">Add your profile picture</h2>
+    <p class="note">A profile picture is required before you can enter the teacher dashboard.</p>
+    <div class="error-box" id="teacherPhotoError"></div>
+    <input type="file" id="teacherPhotoInput" accept="image/jpeg,image/png"/>
+    <button class="btn wide" onclick="saveTeacherPhoto()">Save picture and continue</button>
   </div>
 </div>
 
@@ -1014,7 +1060,8 @@ async function bootApp() {
     document.getElementById('aiFab').style.display = 'none';
     document.getElementById('whoName').textContent = ME.profile.name;
     document.getElementById('whoRole').textContent = ME.profile.role.charAt(0).toUpperCase() + ME.profile.role.slice(1);
-    switchStaffView('messages');
+    if (ME.profile.needsPhoto) return showTeacherOnboarding();
+    switchStaffView(ME.profile.role === 'principal' ? 'admin' : 'messages');
   }
 }
 
@@ -1034,6 +1081,51 @@ function switchStaffView(name) {
   if (name === 'library') { loadStaffLibrary(); startPolling(loadStaffLibrary, 8000); }
   if (name === 'calendar') { loadCalendarStaff(); startPolling(loadCalendarStaff, 8000); }
   if (name === 'admin') { loadAdmin(); stopPolling(); }
+}
+
+function openProfileModal(profile, type) {
+  const isStudent = type === 'student';
+  const snapshot = { type, ...profile, generatedAt: new Date().toISOString() };
+  const detail = isStudent
+    ? [['ID', profile.studentId], ['Class / grade', profile.class], ['Gender', profile.gender || 'Not provided'], ['Points', profile.points ?? 0], ['Streak', `${profile.streak ?? 0} days`], ['Contact', profile.contact || 'Not provided']]
+    : [['ID', profile.staffId], ['Role', profile.role], ['Contact', profile.contact || 'Not provided'], ['Class / grade', profile.class || 'Not provided'], ['Points', 'Not applicable'], ['Streak', 'Not applicable']];
+  document.getElementById('profileModalTitle').textContent = profile.name;
+  document.getElementById('profileModalKind').textContent = isStudent ? 'Student' : 'Teacher / staff';
+  document.getElementById('profileModalDetails').innerHTML = detail.map(([label, value]) => `<span><b>${escapeHtml(label)}:</b> ${escapeHtml(String(value))}</span>`).join('');
+  const photoUrl = profile.photoUrl ? API_BASE + profile.photoUrl + '?token=' + encodeURIComponent(TOKEN) : '';
+  document.getElementById('profileModalPhoto').innerHTML = photoUrl ? `<img src="${photoUrl}" alt="${escapeHtml(profile.name)}">` : escapeHtml(initials(profile.name));
+  document.getElementById('profileModalSnapshot').textContent = snapshot.generatedAt;
+  document.getElementById('profileModalQr').src = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(JSON.stringify(snapshot));
+  document.getElementById('profileModal').dataset.snapshot = JSON.stringify(snapshot);
+  document.getElementById('profileModal').classList.add('open');
+}
+function closeProfileModal() { document.getElementById('profileModal').classList.remove('open'); }
+async function shareProfileCard() {
+  const snapshot = JSON.parse(document.getElementById('profileModal').dataset.snapshot || '{}');
+  const text = `${snapshot.type === 'student' ? 'Student' : 'Teacher'} profile: ${snapshot.name} (${snapshot.studentId || snapshot.staffId}), ${snapshot.class || snapshot.role || ''}. Snapshot: ${snapshot.generatedAt}`;
+  if (navigator.share) await navigator.share({ title: 'Studyo profile', text });
+  else window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank', 'noopener');
+}
+function showTeacherOnboarding() { document.getElementById('teacherOnboarding').classList.add('open'); }
+function hideTeacherPhotoError() { document.getElementById('teacherPhotoError').classList.remove('show'); }
+async function saveTeacherPhoto() {
+  hideTeacherPhotoError();
+  const input = document.getElementById('teacherPhotoInput');
+  const photo = input.files[0];
+  if (!photo) { const error = document.getElementById('teacherPhotoError'); error.textContent = 'Choose a JPEG or PNG picture.'; error.classList.add('show'); return; }
+  if (!['image/jpeg', 'image/png'].includes(photo.type)) { const error = document.getElementById('teacherPhotoError'); error.textContent = 'Profile pictures must be JPEG or PNG files.'; error.classList.add('show'); return; }
+  const form = new FormData();
+  form.append('photo', photo);
+  try {
+    const res = await fetch(API_BASE + '/api/staff/profile-photo', { method: 'POST', headers: { Authorization: 'Bearer ' + TOKEN }, body: form });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Picture upload failed.');
+    ME.profile.photoUrl = data.photoUrl;
+    ME.profile.needsPhoto = false;
+    input.value = '';
+    document.getElementById('teacherOnboarding').classList.remove('open');
+    switchStaffView('messages');
+  } catch (e) { const error = document.getElementById('teacherPhotoError'); error.textContent = e.message; error.classList.add('show'); }
 }
 
 /* ---------------- student: dashboard ---------------- */
@@ -1566,14 +1658,14 @@ function studentRowHtml(s, isPrincipal) {
     ? `<img src="${API_BASE}${s.photoUrl}?token=${encodeURIComponent(TOKEN)}" alt="" style="width:32px;height:32px;border-radius:9px;object-fit:cover;display:block;">`
     : `<div class="avatar" style="width:32px;height:32px;font-size:11px;background:linear-gradient(135deg,#7F77DD,#B08BFF);">${initials(s.name)}</div>`;
   return `
-    <tr>
+    <tr class="directory-row" onclick='openProfileModal(${JSON.stringify(s).replace(/'/g, '&#39;')}, "student")'>
       <td>${avatar}</td>
       <td><b>${escapeHtml(s.name)}</b><div class="mat-meta" style="font-size:11px; color:var(--text-dimmer);">${escapeHtml(s.studentId || '')}</div></td>
       <td>${escapeHtml(s.class)}</td>
       <td style="text-transform:capitalize;">${escapeHtml(s.gender || '—')}</td>
       <td class="flame-row">${'<svg class="icon"><use href="#i-flame"/></svg>'.repeat(Math.min(s.streak, 5))} <span>${s.streak}d</span></td>
       <td>${s.points}</td>
-      ${isPrincipal ? `<td><button class="icon-btn danger" onclick="deleteStudentAdmin('${escapeHtml(s.studentId || '')}','${escapeHtml(s.name)}')" title="Remove student"><svg class="icon"><use href="#i-x"/></svg></button></td>` : ''}
+      ${isPrincipal ? `<td><button class="icon-btn danger" onclick="event.stopPropagation(); deleteStudentAdmin('${escapeHtml(s.studentId || '')}','${escapeHtml(s.name)}')" title="Remove student"><svg class="icon"><use href="#i-x"/></svg></button></td>` : ''}
     </tr>`;
 }
 
@@ -1632,11 +1724,11 @@ async function loadAdmin() {
 
   const { staff } = await api('/api/staff/staff');
   document.getElementById('staffTable').innerHTML = staff.map((s) => `
-    <tr>
-      <td><b>${escapeHtml(s.name)}</b></td>
+    <tr class="directory-row" onclick='openProfileModal(${JSON.stringify(s).replace(/'/g, '&#39;')}, "staff")'>
+      <td>${s.photoUrl ? `<img src="${API_BASE}${s.photoUrl}?token=${encodeURIComponent(TOKEN)}" alt="" class="directory-photo">` : ''}<b>${escapeHtml(s.name)}</b></td>
       <td>${escapeHtml(s.staffId)}</td>
       <td style="text-transform:capitalize;">${escapeHtml(s.role)}</td>
-      ${isPrincipal ? `<td>${s.staffId === ME.profile.staffId ? '' : `<button class="icon-btn danger" onclick="deleteStaffAdmin('${escapeHtml(s.staffId)}','${escapeHtml(s.name)}')" title="Remove staff"><svg class="icon"><use href="#i-x"/></svg></button>`}</td>` : ''}
+      ${isPrincipal ? `<td>${s.staffId === ME.profile.staffId ? '' : `<button class="icon-btn danger" onclick="event.stopPropagation(); deleteStaffAdmin('${escapeHtml(s.staffId)}','${escapeHtml(s.name)}')" title="Remove staff"><svg class="icon"><use href="#i-x"/></svg></button>`}</td>` : ''}
     </tr>`).join('');
 
   const { families } = await api('/api/staff/families');
@@ -1717,13 +1809,25 @@ async function registerStaff() {
   const name = document.getElementById('staffRegName').value.trim();
   const password = document.getElementById('staffRegPw').value;
   const role = document.getElementById('staffRegRole').value;
+  const photoInput = document.getElementById('staffRegPhoto');
+  const photo = photoInput.files[0];
   if (!staffId || !name || !password) return showStaffRegError('Fill in staff ID, name, and password.');
+  if (photo && !['image/jpeg', 'image/png'].includes(photo.type)) return showStaffRegError('Profile pictures must be JPEG or PNG files.');
+  const form = new FormData();
+  form.append('staffId', staffId);
+  form.append('name', name);
+  form.append('password', password);
+  form.append('role', role);
+  if (photo) form.append('photo', photo);
   try {
-    await api('/api/staff/register-staff', { method: 'POST', body: JSON.stringify({ staffId, name, password, role }) });
+    const res = await fetch(API_BASE + '/api/staff/register-staff', { method: 'POST', headers: { Authorization: 'Bearer ' + TOKEN }, body: form });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Registration failed.');
     document.getElementById('staffRegId').value = '';
     document.getElementById('staffRegName').value = '';
     document.getElementById('staffRegPw').value = '';
     document.getElementById('staffRegRole').value = 'teacher';
+    photoInput.value = '';
     await loadAdmin();
   } catch (e) {
     showStaffRegError(e.message);
