@@ -241,12 +241,20 @@
     display:flex !important; flex-wrap:wrap !important; gap:12px !important;
     align-items:flex-end !important; width:100%; min-width:0;
   }
+  .reg-form, .form-container, form.reg-form, div[class*="reg-form"]{
+    display:flex !important; flex-wrap:wrap !important; gap:12px !important;
+    align-items:flex-end !important;
+  }
   .reg-form > div, .upload-form > div, form.resource-form > div, .form-container > div, .form-group{
     flex:1 1 160px !important; min-width:140px !important; min-inline-size:0;
   }
   .reg-form button, .upload-form button, form.resource-form button, .form-container button, .btn-primary{
     flex:1 1 160px !important; min-width:140px; flex-shrink:0 !important;
     margin-top:4px !important; white-space:nowrap;
+  }
+  .reg-form > div, .form-container > div{ flex:1 1 160px !important; min-width:140px !important; }
+  .reg-form button, .form-container button, .reg-form .btn-primary, .reg-form .btn-success{
+    flex-shrink:0 !important; margin-top:4px !important;
   }
 
   .mat-card{ display:flex; align-items:center; gap:14px; padding:14px 16px; border-radius:14px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); margin-bottom:10px; transition:.2s; }
