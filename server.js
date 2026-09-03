@@ -476,16 +476,50 @@ async function handleFamilySendMessage(req, res) {
 async function handleRegisterStudent(req, res) {
   const auth = requireStaff(req, res);
   if (!auth) return;
-  const { studentId, name, class: cls } = await readBody(req);
-  if (!studentId || !name || !cls) return send(res, 400, { error: 'Provide a student ID, name, and class.' });
+
+  const contentType = req.headers['content-type'] || '';
+  const boundaryMatch = contentType.match(/boundary=(.+)$/);
+  if (!boundaryMatch) return send(res, 400, { error: 'Expected a multipart form submission.' });
+
+  let raw;
+  try {
+    raw = await readRawBody(req, MAX_UPLOAD_BYTES);
+  } catch (e) {
+    return send(res, 413, { error: e.message || 'File is too large.' });
+  }
+  const { fields, files } = parseMultipart(raw, boundaryMatch[1]);
+  const studentId = (fields.studentId || '').trim();
+  const name = (fields.name || '').trim();
+  const cls = (fields.class || '').trim();
+  const gender = (fields.gender || '').trim();
+  const photo = files.photo;
+  if (!studentId || !name || !cls || !gender) {
+    return send(res, 400, { error: 'Provide a student ID, name, class, and gender.' });
+  }
+  if (photo && photo.data.length) {
+    const allowedTypes = ['image/jpeg', 'image/png'];
+    if (!allowedTypes.includes(photo.contentType.toLowerCase())) {
+      return send(res, 400, { error: 'Profile pictures must be JPEG or PNG files.' });
+    }
+  }
   if (db.students.some((s) => s.studentId.toLowerCase() === String(studentId).toLowerCase())) {
     return send(res, 409, { error: 'A student with that ID already exists.' });
+  }
+
+  let photoUrl;
+  if (photo && photo.data.length) {
+    const extension = photo.contentType.toLowerCase() === 'image/png' ? '.png' : '.jpg';
+    const storedName = 'student_' + crypto.randomBytes(10).toString('hex') + extension;
+    fs.writeFileSync(path.join(UPLOADS_DIR, storedName), photo.data);
+    photoUrl = `/api/student-photos/${storedName}`;
   }
   const student = {
     id: 'stu_' + crypto.randomBytes(4).toString('hex'),
     studentId,
     name,
     class: cls,
+    gender,
+    ...(photoUrl ? { photoUrl } : {}),
     points: 0,
     registeredBy: auth.id,
     createdAt: new Date().toISOString(),
@@ -804,6 +838,25 @@ function handleServeFile(req, res, storedName) {
   res.end(data);
 }
 
+function handleServeStudentPhoto(req, res, storedName) {
+  const auth = requireStaff(req, res);
+  if (!auth) return;
+  const student = db.students.find((s) => s.photoUrl === `/api/student-photos/${storedName}`);
+  if (!student) return send(res, 404, { error: 'Photo not found.' });
+  const filePath = path.join(UPLOADS_DIR, storedName);
+  if (!fs.existsSync(filePath)) return send(res, 404, { error: 'Photo is missing on the server.' });
+  const data = fs.readFileSync(filePath);
+  const contentType = path.extname(storedName).toLowerCase() === '.png' ? 'image/png' : 'image/jpeg';
+  res.writeHead(200, {
+    'Content-Type': contentType,
+    'Content-Length': data.length,
+    'Content-Disposition': 'inline',
+    'Access-Control-Allow-Origin': '*',
+    'Cache-Control': 'private, max-age=3600',
+  });
+  res.end(data);
+}
+
 function handleListLibrary(req, res) {
   const auth = getAuth(req);
   if (!auth) return send(res, 401, { error: 'Log in to see the digital library.' });
@@ -999,6 +1052,8 @@ const server = http.createServer(async (req, res) => {
     if (m === 'DELETE' && matDeleteMatch) return handleDeleteMaterial(req, res, matDeleteMatch[1]);
     const fileMatch = p.match(/^\/api\/files\/([^/]+)$/);
     if (m === 'GET' && fileMatch) return handleServeFile(req, res, fileMatch[1]);
+    const studentPhotoMatch = p.match(/^\/api\/student-photos\/([^/]+)$/);
+    if (m === 'GET' && studentPhotoMatch) return handleServeStudentPhoto(req, res, studentPhotoMatch[1]);
 
     if (m === 'POST' && p === '/api/staff/calendar') return await handleCreateEvent(req, res);
     if (m === 'GET' && p === '/api/calendar') return handleListEvents(req, res);
