@@ -256,6 +256,26 @@
   .reg-form button, .form-container button, .reg-form .btn-primary, .reg-form .btn-success{
     flex-shrink:0 !important; margin-top:4px !important;
   }
+  /* Force all principal registration, linking, and staff boxes to wrap completely */
+  .reg-form, .form-container, div[class*="reg-form"], .dashboard-card form {
+    display:flex !important;
+    flex-wrap:wrap !important;
+    gap:16px !important;
+    align-items:flex-end !important;
+  }
+
+  /* Make each input group flexible and responsive */
+  .reg-form > div, .form-container > div, div[class*="reg-form"] > div {
+    flex:1 1 180px !important;
+    min-width:150px !important;
+  }
+
+  /* Ensure action buttons wrap cleanly to a new line or stay completely visible */
+  .reg-form button, .form-container button, div[class*="reg-form"] button, .btn-primary, .btn-success {
+    flex-shrink:0 !important;
+    margin-top:8px !important;
+    width:100% !important;
+  }
 
   .mat-card{ display:flex; align-items:center; gap:14px; padding:14px 16px; border-radius:14px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); margin-bottom:10px; transition:.2s; }
   .mat-card:hover{ background:rgba(255,255,255,.08); }
