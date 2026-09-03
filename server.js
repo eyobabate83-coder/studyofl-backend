@@ -164,6 +164,7 @@ function loadDB() {
   // Migration guard: fill in any tables added after this file was first created,
   // so upgrading the server code never crashes on an older data.json.
   if (!loaded.materials) loaded.materials = [];
+  if (!loaded.library) loaded.library = [];
   if (!loaded.calendarEvents) loaded.calendarEvents = [];
   if (!loaded.families) loaded.families = [];
   return loaded;
@@ -513,6 +514,13 @@ function handleListFamilies(req, res) {
   send(res, 200, { families });
 }
 
+function handleListStaff(req, res) {
+  const auth = requireStaff(req, res);
+  if (!auth) return;
+  const staff = db.staff.map(({ passwordHash, ...profile }) => profile);
+  send(res, 200, { staff });
+}
+
 function handleMe(req, res) {
   const auth = getAuth(req);
   if (!auth) return send(res, 401, { error: 'Not logged in.' });
@@ -796,6 +804,20 @@ function handleServeFile(req, res, storedName) {
   res.end(data);
 }
 
+function handleListLibrary(req, res) {
+  const auth = getAuth(req);
+  if (!auth) return send(res, 401, { error: 'Log in to see the digital library.' });
+
+  const grade = auth.type === 'student'
+    ? Number.parseInt(String(auth.class || '').match(/\d{1,2}/)?.[0] || '', 10)
+    : null;
+  const items = db.library
+    .filter((item) => auth.type !== 'student' || item.gradeLevel === grade)
+    .slice()
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  send(res, 200, { items });
+}
+
 /* ------------------------------------------------------------------ */
 /* calendar (principal posts events; everyone logged in can view)     */
 /* ------------------------------------------------------------------ */
@@ -949,6 +971,7 @@ const server = http.createServer(async (req, res) => {
     if (m === 'POST' && p === '/api/staff/register-family') return await handleRegisterFamily(req, res);
     if (m === 'GET' && p === '/api/staff/students') return handleListStudents(req, res);
     if (m === 'GET' && p === '/api/staff/families') return handleListFamilies(req, res);
+    if (m === 'GET' && p === '/api/staff/staff') return handleListStaff(req, res);
     if (m === 'GET' && p === '/api/me') return handleMe(req, res);
 
     if (m === 'GET' && p === '/api/todos') return handleGetTodos(req, res);
@@ -971,6 +994,7 @@ const server = http.createServer(async (req, res) => {
 
     if (m === 'POST' && p === '/api/staff/materials') return await handleUploadMaterial(req, res);
     if (m === 'GET' && p === '/api/materials') return handleListMaterials(req, res);
+    if (m === 'GET' && p === '/api/library') return handleListLibrary(req, res);
     const matDeleteMatch = p.match(/^\/api\/staff\/materials\/([^/]+)$/);
     if (m === 'DELETE' && matDeleteMatch) return handleDeleteMaterial(req, res, matDeleteMatch[1]);
     const fileMatch = p.match(/^\/api\/files\/([^/]+)$/);
