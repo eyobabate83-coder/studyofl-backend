@@ -693,6 +693,7 @@
         </div>
         <div class="field"><label>PDF file</label><input type="file" id="libFile" accept=".pdf,application/pdf"/></div>
         <button class="btn" onclick="uploadLibraryItem()"><svg class="icon" style="margin-right:6px;"><use href="#i-upload"/></svg>Upload</button>
+        <span id="libUploadProgress" class="note" aria-live="polite"></span>
       </div>
     </div>
 
@@ -1252,16 +1253,28 @@ async function uploadLibraryItem() {
   form.append('file', file);
 
   try {
-    const res = await fetch(API_BASE + '/api/staff/library', {
-      method: 'POST',
-      headers: { Authorization: 'Bearer ' + TOKEN },
-      body: form,
+    const progress = document.getElementById('libUploadProgress');
+    progress.textContent = '0%';
+    const data = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', API_BASE + '/api/staff/library');
+      xhr.setRequestHeader('Authorization', 'Bearer ' + TOKEN);
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) progress.textContent = `${Math.round((event.loaded / event.total) * 100)}%`;
+      };
+      xhr.onload = () => {
+        let response;
+        try { response = JSON.parse(xhr.responseText); } catch { return reject(new Error('Upload failed.')); }
+        if (xhr.status < 200 || xhr.status >= 300) return reject(new Error(response.error || 'Upload failed.'));
+        resolve(response);
+      };
+      xhr.onerror = () => reject(new Error('Upload failed.'));
+      xhr.send(form);
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Upload failed.');
     document.getElementById('libTitle').value = '';
     document.getElementById('libSubject').value = '';
     fileInput.value = '';
+    document.getElementById('libUploadProgress').textContent = '100%';
     await loadStaffLibrary();
   } catch (e) {
     showLibError(e.message);

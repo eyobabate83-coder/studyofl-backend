@@ -894,8 +894,74 @@ function handleListLibrary(req, res) {
   const items = db.library
     .filter((item) => auth.type !== 'student' || item.gradeLevel === grade)
     .slice()
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .map((item) => ({
+      ...item,
+      storedName: undefined,
+      viewUrl: `/api/library-files/${item.storedName}`,
+      downloadUrl: `/api/library-files/${item.storedName}?download=1`,
+    }));
   send(res, 200, { items });
+}
+
+async function handleUploadLibrary(req, res) {
+  const auth = requireStaff(req, res);
+  if (!auth) return;
+  const contentType = req.headers['content-type'] || '';
+  const boundaryMatch = contentType.match(/boundary=(.+)$/);
+  if (!boundaryMatch) return send(res, 400, { error: 'Expected a PDF upload (multipart form data).' });
+  let raw;
+  try { raw = await readRawBody(req, MAX_UPLOAD_BYTES); }
+  catch (e) { return send(res, 413, { error: e.message || 'File is too large.' }); }
+  const { fields, files } = parseMultipart(raw, boundaryMatch[1]);
+  const file = files.file;
+  if (!file || !file.data.length) return send(res, 400, { error: 'Attach a PDF file.' });
+  if (!/\.pdf$/i.test(file.filename || '') || file.contentType.toLowerCase() !== 'application/pdf') {
+    return send(res, 400, { error: 'Only PDF files are allowed in the library.' });
+  }
+  const title = (fields.title || '').trim();
+  const subject = (fields.subject || '').trim();
+  const resourceType = (fields.resourceType || '').trim();
+  const gradeLevel = Number.parseInt(fields.gradeLevel, 10);
+  if (!title || !subject || !['textbook', 'teacher_guide'].includes(resourceType) || !Number.isInteger(gradeLevel)) {
+    return send(res, 400, { error: 'Provide a title, subject, resource type, and grade level.' });
+  }
+  const storedName = 'lib_' + crypto.randomBytes(10).toString('hex') + '.pdf';
+  fs.writeFileSync(path.join(UPLOADS_DIR, storedName), file.data);
+  const item = {
+    id: 'lib_' + crypto.randomBytes(4).toString('hex'), title, subject, resourceType, gradeLevel,
+    fileName: file.filename, storedName, size: file.data.length, uploadedBy: auth.name,
+    createdAt: new Date().toISOString(),
+  };
+  db.library.push(item);
+  saveDB(db);
+  send(res, 201, { item: { ...item, storedName: undefined, viewUrl: `/api/library-files/${storedName}`, downloadUrl: `/api/library-files/${storedName}?download=1` } });
+}
+
+function handleServeLibraryFile(req, res, storedName) {
+  const auth = getAuth(req);
+  if (!auth) return send(res, 401, { error: 'Log in to view this resource.' });
+  const item = db.library.find((entry) => entry.storedName === storedName);
+  if (!item) return send(res, 404, { error: 'Resource not found.' });
+  const grade = auth.type === 'student' ? Number.parseInt(String(auth.class || '').match(/\d{1,2}/)?.[0] || '', 10) : null;
+  if (auth.type === 'student' && item.gradeLevel !== grade) return send(res, 403, { error: "This resource isn't available for your grade." });
+  const filePath = path.join(UPLOADS_DIR, storedName);
+  if (!fs.existsSync(filePath)) return send(res, 404, { error: 'Resource is missing on the server.' });
+  const data = fs.readFileSync(filePath);
+  const disposition = new URL(req.url, `http://${req.headers.host}`).searchParams.has('download') ? 'attachment' : 'inline';
+  res.writeHead(200, { 'Content-Type': 'application/pdf', 'Content-Length': data.length, 'Content-Disposition': `${disposition}; filename="${item.fileName.replace(/"/g, '')}"`, 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'private, max-age=3600' });
+  res.end(data);
+}
+
+function handleDeleteLibrary(req, res, id) {
+  const auth = requireStaff(req, res);
+  if (!auth) return;
+  const item = db.library.find((entry) => entry.id === id);
+  if (!item) return send(res, 404, { error: 'Resource not found.' });
+  db.library = db.library.filter((entry) => entry.id !== id);
+  saveDB(db);
+  try { fs.unlinkSync(path.join(UPLOADS_DIR, item.storedName)); } catch {}
+  send(res, 200, { ok: true });
 }
 
 /* ------------------------------------------------------------------ */
@@ -1078,7 +1144,12 @@ const server = http.createServer(async (req, res) => {
 
     if (m === 'POST' && p === '/api/staff/materials') return await handleUploadMaterial(req, res);
     if (m === 'GET' && p === '/api/materials') return handleListMaterials(req, res);
+    if (m === 'POST' && p === '/api/staff/library') return await handleUploadLibrary(req, res);
+    const libraryDeleteMatch = p.match(/^\/api\/staff\/library\/([^/]+)$/);
+    if (m === 'DELETE' && libraryDeleteMatch) return handleDeleteLibrary(req, res, libraryDeleteMatch[1]);
     if (m === 'GET' && p === '/api/library') return handleListLibrary(req, res);
+    const libraryFileMatch = p.match(/^\/api\/library-files\/([^/]+)$/);
+    if (m === 'GET' && libraryFileMatch) return handleServeLibraryFile(req, res, libraryFileMatch[1]);
     const matDeleteMatch = p.match(/^\/api\/staff\/materials\/([^/]+)$/);
     if (m === 'DELETE' && matDeleteMatch) return handleDeleteMaterial(req, res, matDeleteMatch[1]);
     const fileMatch = p.match(/^\/api\/files\/([^/]+)$/);
