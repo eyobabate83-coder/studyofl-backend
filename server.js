@@ -59,6 +59,9 @@ const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
 // DEMO ONLY: in production this must come from a secret manager / env var
 // that is never committed to source control.
 const TOKEN_SECRET = process.env.STUDYO_SECRET || 'studyo-dev-secret-change-me';
+const BLOCKED_DEMO_STAFF_IDS = new Set(['T-2001']);
+const BLOCKED_DEMO_STUDENT_IDS = new Set(['S-3001']);
+const BLOCKED_DEMO_FAMILY_IDS = new Set(['F-5001']);
 
 /* ------------------------------------------------------------------ */
 /* tiny JSON-file "database"                                          */
@@ -377,6 +380,9 @@ function todayStr() {
 async function handleStaffLogin(req, res) {
   const { staffId, password } = await readBody(req);
   if (!staffId || !password) return send(res, 400, { error: 'Enter a staff ID and password.' });
+  if (BLOCKED_DEMO_STAFF_IDS.has(String(staffId).trim().toUpperCase())) {
+    return send(res, 401, { error: "That demo staff account is no longer available." });
+  }
   const staff = db.staff.find((s) => s.staffId.toLowerCase() === String(staffId).toLowerCase());
   if (!staff || !verifyPassword(password, staff.passwordHash)) {
     return send(res, 401, { error: "That staff ID or password doesn't match our records." });
@@ -448,6 +454,9 @@ async function handleUpdateStaffPhoto(req, res) {
 async function handleStudentLogin(req, res) {
   const { studentId, name } = await readBody(req);
   if (!studentId || !name) return send(res, 400, { error: 'Enter your student ID and full name.' });
+  if (BLOCKED_DEMO_STUDENT_IDS.has(String(studentId).trim().toUpperCase())) {
+    return send(res, 401, { error: "That demo student account is no longer available. Ask your teacher or principal to register you." });
+  }
   const student = db.students.find(
     (s) => s.studentId.toLowerCase() === String(studentId).toLowerCase() &&
            s.name.trim().toLowerCase() === String(name).trim().toLowerCase()
@@ -462,6 +471,9 @@ async function handleStudentLogin(req, res) {
 async function handleFamilyLogin(req, res) {
   const { familyId, password } = await readBody(req);
   if (!familyId || !password) return send(res, 400, { error: 'Enter your family ID and password.' });
+  if (BLOCKED_DEMO_FAMILY_IDS.has(String(familyId).trim().toUpperCase())) {
+    return send(res, 401, { error: "That demo family account is no longer available." });
+  }
   const family = db.families.find((f) => f.familyId.toLowerCase() === String(familyId).toLowerCase());
   if (!family || !verifyPassword(password, family.passwordHash)) {
     return send(res, 401, { error: "That family ID or password doesn't match our records." });
@@ -1254,8 +1266,4 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, () => {
   console.log(`Studyo backend running at http://localhost:${PORT}`);
-  console.log(`Demo principal login  -> staff ID: P-1001  password: admin123`);
-  console.log(`Demo teacher login    -> staff ID: T-2001  password: teach123`);
-  console.log(`Demo student login    -> student ID: S-3001  name: Selam Tesfaye`);
-  console.log(`Demo family login     -> family ID: F-5001  password: family123`);
 });
